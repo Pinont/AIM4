@@ -46,25 +46,24 @@ public class Main {
    * The main function of the simulator.
    * It starts the GUI.
    *
-   * @param args  the command-line arguments; it should be empty since the GUI
-   *              does not take any command-line arguments
+   * @param args the command-line arguments; it should be empty since the GUI
+   *             does not take any command-line arguments
    *
    */
   public static void main(String[] args) {
 
     // create the basic setup
 
-    BasicSimSetup simSetup
-      = new BasicSimSetup(1, // columns
-                          1, // rows
-                          4, // lane width
-                          25.0, // speed limit
-                          3, // lanes per road
-                          1, // median size
-                          150, // distance between
-                          0.28, // traffic level
-                          1.0 // stop distance before intersection
-                          );
+    BasicSimSetup simSetup = new BasicSimSetup(1, // columns
+        1, // rows
+        4, // lane width
+        25.0, // speed limit
+        3, // lanes per road
+        1, // median size
+        150, // distance between
+        0.28, // traffic level
+        1.0 // stop distance before intersection
+    );
 
     new Viewer(simSetup);
   }

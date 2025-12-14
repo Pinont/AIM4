@@ -74,13 +74,12 @@ public class GridMapUtil {
   /**
    * The null spawn spec generator that generates nothing.
    */
-  public static SpawnSpecGenerator nullSpawnSpecGenerator =
-    new SpawnSpecGenerator() {
+  public static SpawnSpecGenerator nullSpawnSpecGenerator = new SpawnSpecGenerator() {
     @Override
-      public List<SpawnSpec> act(SpawnPoint spawnPoint, double timeStep) {
-        return new ArrayList<SpawnSpec>();
-      }
-    };
+    public List<SpawnSpec> act(SpawnPoint spawnPoint, double timeStep) {
+      return new ArrayList<SpawnSpec>();
+    }
+  };
 
   /**
    * The uniform distributed spawn spec generator.
@@ -96,15 +95,15 @@ public class GridMapUtil {
     /**
      * Create an uniform spawn specification generator.
      *
-     * @param trafficLevel         the traffic level
-     * @param destinationSelector  the destination selector
+     * @param trafficLevel        the traffic level
+     * @param destinationSelector the destination selector
      */
     public UniformSpawnSpecGenerator(double trafficLevel,
-                                     DestinationSelector destinationSelector) {
+        DestinationSelector destinationSelector) {
       int n = VehicleSpecDatabase.getNumOfSpec();
       proportion = new ArrayList<Double>(n);
       double p = 1.0 / n;
-      for(int i=0; i<n; i++) {
+      for (int i = 0; i < n; i++) {
         proportion.add(p);
       }
       this.destinationSelector = destinationSelector;
@@ -122,19 +121,40 @@ public class GridMapUtil {
       List<SpawnSpec> result = new LinkedList<SpawnSpec>();
 
       double initTime = spawnPoint.getCurrentTime();
-      for(double time = initTime; time < initTime + timeStep;
-          time += SimConfig.SPAWN_TIME_STEP) {
+      for (double time = initTime; time < initTime + timeStep; time += SimConfig.SPAWN_TIME_STEP) {
         if (Util.random.nextDouble() < prob) {
           int i = Util.randomIndex(proportion);
-          VehicleSpec vehicleSpec = VehicleSpecDatabase.getVehicleSpecById(i);
-          Road destinationRoad =
-            destinationSelector.selectDestination(spawnPoint.getLane());
+          VehicleSpec baseSpec = VehicleSpecDatabase.getVehicleSpecById(i);
+
+          // Generate random scale factors independently for length and width
+          // Length scaling: 0.9 to 1.3
+          double scaleLength = 0.9 + (Util.random.nextDouble() * 0.4);
+          // Width scaling: 0.9 to 1.1 (less variance for width to fit lanes)
+          double scaleWidth = 0.9 + (Util.random.nextDouble() * 0.2);
+
+          VehicleSpec vehicleSpec = new VehicleSpec(
+              baseSpec.getName(),
+              baseSpec.getMaxAcceleration(),
+              baseSpec.getMaxDeceleration(),
+              baseSpec.getMaxVelocity(),
+              baseSpec.getMinVelocity(),
+              baseSpec.getLength() * scaleLength,
+              baseSpec.getWidth() * scaleWidth,
+              baseSpec.getFrontAxleDisplacement() * scaleLength,
+              baseSpec.getRearAxleDisplacement() * scaleLength,
+              baseSpec.getWheelSpan() * scaleWidth,
+              baseSpec.getWheelRadius() * scaleWidth, // Scale radius with width
+              baseSpec.getWheelWidth() * scaleWidth,
+              baseSpec.getMaxSteeringAngle(),
+              baseSpec.getMaxTurnPerSecond());
+
+          Road destinationRoad = destinationSelector.selectDestination(spawnPoint.getLane());
 
           // maybe spawnPoint.getCurrentTime() is incorrect
 
           result.add(new SpawnSpec(spawnPoint.getCurrentTime(),
-                                   vehicleSpec,
-                                   destinationRoad));
+              vehicleSpec,
+              destinationRoad));
         }
       }
 
@@ -156,13 +176,13 @@ public class GridMapUtil {
     /**
      * Create a spawn spec generator that generates only one spec.
      *
-     * @param vehicleSpecId        the vehicle spec ID
-     * @param trafficLevel         the traffic level
-     * @param destinationSelector  the destination selector
+     * @param vehicleSpecId       the vehicle spec ID
+     * @param trafficLevel        the traffic level
+     * @param destinationSelector the destination selector
      */
     public OneSpawnSpecGenerator(int vehicleSpecId,
-                                 double trafficLevel,
-                                 DestinationSelector destinationSelector) {
+        double trafficLevel,
+        DestinationSelector destinationSelector) {
       vehicleSpec = VehicleSpecDatabase.getVehicleSpecById(vehicleSpecId);
       this.destinationSelector = destinationSelector;
 
@@ -179,15 +199,13 @@ public class GridMapUtil {
       List<SpawnSpec> result = new LinkedList<SpawnSpec>();
 
       double initTime = spawnPoint.getCurrentTime();
-      for(double time = initTime; time < initTime + timeStep;
-          time += SimConfig.SPAWN_TIME_STEP) {
+      for (double time = initTime; time < initTime + timeStep; time += SimConfig.SPAWN_TIME_STEP) {
         if (Util.random.nextDouble() < prob) {
-          Road destinationRoad =
-            destinationSelector.selectDestination(spawnPoint.getLane());
+          Road destinationRoad = destinationSelector.selectDestination(spawnPoint.getLane());
 
           result.add(new SpawnSpec(spawnPoint.getCurrentTime(),
-                                   vehicleSpec,
-                                   destinationRoad));
+              vehicleSpec,
+              destinationRoad));
         }
       }
 
@@ -211,8 +229,8 @@ public class GridMapUtil {
      * Create a spec generator that generates just one vehicle in the entire
      * simulation.
      *
-     * @param vehicleSpecId    the vehicle spec ID
-     * @param destinationRoad  the destination road
+     * @param vehicleSpecId   the vehicle spec ID
+     * @param destinationRoad the destination road
      */
     public OnlyOneSpawnSpecGenerator(int vehicleSpecId, Road destinationRoad) {
       vehicleSpec = VehicleSpecDatabase.getVehicleSpecById(vehicleSpecId);
@@ -229,8 +247,8 @@ public class GridMapUtil {
       if (!isDone) {
         isDone = true;
         result.add(new SpawnSpec(spawnPoint.getCurrentTime(),
-                                 vehicleSpec,
-                                 destinationRoad));
+            vehicleSpec,
+            destinationRoad));
       }
       return result;
     }
@@ -239,7 +257,7 @@ public class GridMapUtil {
   /**
    * The spawn spec generator that enumerates spawn spec.
    */
-  public static class EnumerateSpawnSpecGenerator implements SpawnSpecGenerator{
+  public static class EnumerateSpawnSpecGenerator implements SpawnSpecGenerator {
     /** The list of destination roads */
     private List<Road> destinationRoads;
     /** The vehicle spec ID */
@@ -254,17 +272,17 @@ public class GridMapUtil {
     /**
      * Create a spawn spec generator that enumerates spawn spec.
      *
-     * @param spawnPoint        the spawn point
-     * @param destinationRoads  the list of destination roads
-     * @param initSpawnTime     the initial spawn time
-     * @param spawnPeriod       the spawn period
+     * @param spawnPoint       the spawn point
+     * @param destinationRoads the list of destination roads
+     * @param initSpawnTime    the initial spawn time
+     * @param spawnPeriod      the spawn period
      */
     public EnumerateSpawnSpecGenerator(SpawnPoint spawnPoint,
-                                       List<Road> destinationRoads,
-                                       double initSpawnTime,
-                                       double spawnPeriod) {
+        List<Road> destinationRoads,
+        double initSpawnTime,
+        double spawnPeriod) {
       this.destinationRoads = new ArrayList<Road>(destinationRoads.size());
-      for(Road road : destinationRoads) {
+      for (Road road : destinationRoads) {
         if (Debug.currentMap.getRoad(spawnPoint.getLane()).getDual() != road) {
           this.destinationRoads.add(road);
         }
@@ -283,51 +301,45 @@ public class GridMapUtil {
       List<SpawnSpec> result = new ArrayList<SpawnSpec>(1);
       if (spawnPoint.getCurrentTime() >= nextSpawnTime) {
         if (vehicleSpecId < VehicleSpecDatabase.getNumOfSpec()) {
-          VehicleSpec vehicleSpec =
-            VehicleSpecDatabase.getVehicleSpecById(vehicleSpecId);
-          Road destinationRoad =
-            destinationRoads.get(destinationRoadId);
+          VehicleSpec vehicleSpec = VehicleSpecDatabase.getVehicleSpecById(vehicleSpecId);
+          Road destinationRoad = destinationRoads.get(destinationRoadId);
           result.add(new SpawnSpec(spawnPoint.getCurrentTime(),
-                                   vehicleSpec,
-                                   destinationRoad));
+              vehicleSpec,
+              destinationRoad));
           nextSpawnTime += spawnPeriod;
           destinationRoadId++;
           if (destinationRoadId >= destinationRoads.size()) {
             destinationRoadId = 0;
             vehicleSpecId++;
           }
-        }  // else don't spawn any vehicle
+        } // else don't spawn any vehicle
       } // else wait until next spawn time
       return result;
     }
   }
 
-
   /////////////////////////////////
   // PUBLIC STATIC METHODS
   /////////////////////////////////
 
-
   /**
    * Set the FCFS managers at all intersections.
    *
-   * @param layout       the map
-   * @param currentTime  the current time
-   * @param config       the reservation grid manager configuration
+   * @param layout      the map
+   * @param currentTime the current time
+   * @param config      the reservation grid manager configuration
    */
   public static void setFCFSManagers(GridMap layout,
-                                     double currentTime,
-                                     ReservationGridManager.Config config) {
+      double currentTime,
+      ReservationGridManager.Config config) {
     layout.removeAllManagers();
-    for(int column = 0; column < layout.getColumns(); column++) {
-      for(int row = 0; row < layout.getRows(); row++) {
+    for (int column = 0; column < layout.getColumns(); column++) {
+      for (int row = 0; row < layout.getRows(); row++) {
         List<Road> roads = layout.getRoads(column, row);
         RoadBasedIntersection intersection = new RoadBasedIntersection(roads);
-        RoadBasedTrackModel trajectoryModel =
-          new RoadBasedTrackModel(intersection);
-        V2IManager im =
-          new V2IManager(intersection, trajectoryModel, currentTime,
-                         config, layout.getImRegistry());
+        RoadBasedTrackModel trajectoryModel = new RoadBasedTrackModel(intersection);
+        V2IManager im = new V2IManager(intersection, trajectoryModel, currentTime,
+            config, layout.getImRegistry());
         im.setPolicy(new BasePolicy(im, new FCFSRequestHandler()));
         layout.setManager(column, row, im);
       }
@@ -337,27 +349,24 @@ public class GridMapUtil {
   /**
    * Set the bath managers at all intersections.
    *
-   * @param layout              the map
-   * @param currentTime         the current time
-   * @param config              the reservation grid manager configuration
-   * @param processingInterval  the processing interval
+   * @param layout             the map
+   * @param currentTime        the current time
+   * @param config             the reservation grid manager configuration
+   * @param processingInterval the processing interval
    */
   public static void setBatchManagers(GridMap layout,
-                                      double currentTime,
-                                      ReservationGridManager.Config config,
-                                      double processingInterval) {
+      double currentTime,
+      ReservationGridManager.Config config,
+      double processingInterval) {
     layout.removeAllManagers();
-    for(int column = 0; column < layout.getColumns(); column++) {
-      for(int row = 0; row < layout.getRows(); row++) {
+    for (int column = 0; column < layout.getColumns(); column++) {
+      for (int row = 0; row < layout.getRows(); row++) {
         List<Road> roads = layout.getRoads(column, row);
         RoadBasedIntersection intersection = new RoadBasedIntersection(roads);
-        RoadBasedTrackModel trajectoryModel =
-          new RoadBasedTrackModel(intersection);
-        V2IManager im =
-          new V2IManager(intersection, trajectoryModel, currentTime,
-                         config, layout.getImRegistry());
-        RequestHandler rh =
-          new BatchModeRequestHandler(
+        RoadBasedTrackModel trajectoryModel = new RoadBasedTrackModel(intersection);
+        V2IManager im = new V2IManager(intersection, trajectoryModel, currentTime,
+            config, layout.getImRegistry());
+        RequestHandler rh = new BatchModeRequestHandler(
             new RoadBasedReordering(processingInterval),
             new BatchModeRequestHandler.RequestStatCollector());
         im.setPolicy(new BasePolicy(im, rh));
@@ -366,71 +375,65 @@ public class GridMapUtil {
     }
   }
 
-
   /**
    * Set the approximate simple traffic light managers at all intersections.
    *
-   * @param layout               the map
-   * @param currentTime          the current time
-   * @param config               the reservation grid manager configuration
-   * @param greenLightDuration   the green light duration
-   * @param yellowLightDuration  the yellow light duration
+   * @param layout              the map
+   * @param currentTime         the current time
+   * @param config              the reservation grid manager configuration
+   * @param greenLightDuration  the green light duration
+   * @param yellowLightDuration the yellow light duration
    */
   public static void setApproxSimpleTrafficLightManagers(
-                                          GridMap layout,
-                                          double currentTime,
-                                          ReservationGridManager.Config config,
-                                          double greenLightDuration,
-                                          double yellowLightDuration) {
+      GridMap layout,
+      double currentTime,
+      ReservationGridManager.Config config,
+      double greenLightDuration,
+      double yellowLightDuration) {
 
     layout.removeAllManagers();
     for (int column = 0; column < layout.getColumns(); column++) {
       for (int row = 0; row < layout.getRows(); row++) {
         List<Road> roads = layout.getRoads(column, row);
         RoadBasedIntersection intersection = new RoadBasedIntersection(roads);
-        RoadBasedTrackModel trajectoryModel =
-            new RoadBasedTrackModel(intersection);
-        V2IManager im =
-            new V2IManager(intersection, trajectoryModel, currentTime,
-                           config, layout.getImRegistry());
-        ApproxSimpleTrafficSignalRequestHandler requestHandler =
-            new ApproxSimpleTrafficSignalRequestHandler(greenLightDuration,
-                                                        yellowLightDuration);
+        RoadBasedTrackModel trajectoryModel = new RoadBasedTrackModel(intersection);
+        V2IManager im = new V2IManager(intersection, trajectoryModel, currentTime,
+            config, layout.getImRegistry());
+        ApproxSimpleTrafficSignalRequestHandler requestHandler = new ApproxSimpleTrafficSignalRequestHandler(
+            greenLightDuration,
+            yellowLightDuration);
         im.setPolicy(new BasePolicy(im, requestHandler));
         layout.setManager(column, row, im);
       }
     }
   }
 
-
   /**
    * Set the approximate 4 phases traffic light managers at all intersections.
    *
-   * @param layout               the map
-   * @param currentTime          the current time
-   * @param config               the reservation grid manager configuration
-   * @param greenLightDuration   the green light duration
-   * @param yellowLightDuration  the yellow light duration
+   * @param layout              the map
+   * @param currentTime         the current time
+   * @param config              the reservation grid manager configuration
+   * @param greenLightDuration  the green light duration
+   * @param yellowLightDuration the yellow light duration
    */
   public static void setApprox4PhasesTrafficLightManagers(
-                                         GridMap layout,
-                                         double currentTime,
-                                         ReservationGridManager.Config config,
-                                         double greenLightDuration,
-                                         double yellowLightDuration) {
+      GridMap layout,
+      double currentTime,
+      ReservationGridManager.Config config,
+      double greenLightDuration,
+      double yellowLightDuration) {
     layout.removeAllManagers();
-    for(int column = 0; column < layout.getColumns(); column++) {
-      for(int row = 0; row < layout.getRows(); row++) {
+    for (int column = 0; column < layout.getColumns(); column++) {
+      for (int row = 0; row < layout.getRows(); row++) {
         List<Road> roads = layout.getRoads(column, row);
         RoadBasedIntersection intersection = new RoadBasedIntersection(roads);
-        RoadBasedTrackModel trajectoryModel =
-          new RoadBasedTrackModel(intersection);
-        V2IManager im =
-          new V2IManager(intersection, trajectoryModel, currentTime,
-                         config, layout.getImRegistry());
-        Approx4PhasesTrafficSignalRequestHandler requestHandler =
-          new Approx4PhasesTrafficSignalRequestHandler(greenLightDuration,
-                                                       yellowLightDuration);
+        RoadBasedTrackModel trajectoryModel = new RoadBasedTrackModel(intersection);
+        V2IManager im = new V2IManager(intersection, trajectoryModel, currentTime,
+            config, layout.getImRegistry());
+        Approx4PhasesTrafficSignalRequestHandler requestHandler = new Approx4PhasesTrafficSignalRequestHandler(
+            greenLightDuration,
+            yellowLightDuration);
         im.setPolicy(new BasePolicy(im, requestHandler));
         layout.setManager(column, row, im);
       }
@@ -440,12 +443,12 @@ public class GridMapUtil {
   /**
    * Set the approximate N phases traffic light managers at all intersections.
    *
-   * @param layout                      the map
-   * @param currentTime                 the current time
-   * @param config                      the reservation grid manager
-   *                                    configuration
-   * @param trafficSignalPhaseFileName  the name of the file contains the
-   *                                    traffic signals duration information
+   * @param layout                     the map
+   * @param currentTime                the current time
+   * @param config                     the reservation grid manager
+   *                                   configuration
+   * @param trafficSignalPhaseFileName the name of the file contains the
+   *                                   traffic signals duration information
    */
   public static void setApproxNPhasesTrafficLightManagers(
       GridMap layout,
@@ -458,21 +461,16 @@ public class GridMapUtil {
       for (int row = 0; row < layout.getRows(); row++) {
         List<Road> roads = layout.getRoads(column, row);
         RoadBasedIntersection intersection = new RoadBasedIntersection(roads);
-        RoadBasedTrackModel trajectoryModel =
-            new RoadBasedTrackModel(intersection);
-        V2IManager im =
-            new V2IManager(intersection, trajectoryModel, currentTime,
-                           config, layout.getImRegistry());
-        ApproxNPhasesTrafficSignalRequestHandler requestHandler =
-            new ApproxNPhasesTrafficSignalRequestHandler();
+        RoadBasedTrackModel trajectoryModel = new RoadBasedTrackModel(intersection);
+        V2IManager im = new V2IManager(intersection, trajectoryModel, currentTime,
+            config, layout.getImRegistry());
+        ApproxNPhasesTrafficSignalRequestHandler requestHandler = new ApproxNPhasesTrafficSignalRequestHandler();
 
-        TrafficSignalPhase phase =
-            TrafficSignalPhase.makeFromFile(layout, trafficSignalPhaseFileName);
+        TrafficSignalPhase phase = TrafficSignalPhase.makeFromFile(layout, trafficSignalPhaseFileName);
 
-        for(Road road : im.getIntersection().getEntryRoads()) {
-          for(Lane lane : road.getLanes()) {
-            CyclicSignalController controller =
-                phase.calcCyclicSignalController(road);
+        for (Road road : im.getIntersection().getEntryRoads()) {
+          for (Lane lane : road.getLanes()) {
+            CyclicSignalController controller = phase.calcCyclicSignalController(road);
             requestHandler.setSignalControllers(lane.getId(), controller);
           }
         }
@@ -486,25 +484,22 @@ public class GridMapUtil {
   /**
    * Set the approximate N phases traffic light managers at all intersections.
    *
-   * @param layout       the map
-   * @param currentTime  the current time
-   * @param config       the reservation grid manager configuration
+   * @param layout      the map
+   * @param currentTime the current time
+   * @param config      the reservation grid manager configuration
    */
   public static void setApproxStopSignManagers(GridMap layout,
-                                               double currentTime,
-                                         ReservationGridManager.Config config) {
+      double currentTime,
+      ReservationGridManager.Config config) {
     layout.removeAllManagers();
-    for(int column = 0; column < layout.getColumns(); column++) {
-      for(int row = 0; row < layout.getRows(); row++) {
+    for (int column = 0; column < layout.getColumns(); column++) {
+      for (int row = 0; row < layout.getRows(); row++) {
         List<Road> roads = layout.getRoads(column, row);
         RoadBasedIntersection intersection = new RoadBasedIntersection(roads);
-        RoadBasedTrackModel trajectoryModel =
-          new RoadBasedTrackModel(intersection);
-        V2IManager im =
-          new V2IManager(intersection, trajectoryModel, currentTime,
-                         config, layout.getImRegistry());
-        ApproxStopSignRequestHandler requestHandler =
-          new ApproxStopSignRequestHandler();
+        RoadBasedTrackModel trajectoryModel = new RoadBasedTrackModel(intersection);
+        V2IManager im = new V2IManager(intersection, trajectoryModel, currentTime,
+            config, layout.getImRegistry());
+        ApproxStopSignRequestHandler requestHandler = new ApproxStopSignRequestHandler();
         im.setPolicy(new BasePolicy(im, requestHandler));
         layout.setManager(column, row, im);
       }
@@ -514,52 +509,50 @@ public class GridMapUtil {
   /**
    * Set the uniform random spawn points.
    *
-   * @param map           the map
-   * @param trafficLevel  the traffic level
+   * @param map          the map
+   * @param trafficLevel the traffic level
    */
   public static void setUniformRandomSpawnPoints(GridMap map,
-                                                 double trafficLevel) {
-    for(SpawnPoint sp : map.getSpawnPoints()) {
+      double trafficLevel) {
+    for (SpawnPoint sp : map.getSpawnPoints()) {
       sp.setVehicleSpecChooser(
-        new UniformSpawnSpecGenerator(trafficLevel,
-                                      new RandomDestinationSelector(map)));
+          new UniformSpawnSpecGenerator(trafficLevel,
+              new RandomDestinationSelector(map)));
     }
   }
 
   /**
    * Set the uniform turn based spawn points.
    *
-   * @param map           the map
-   * @param trafficLevel  the traffic level
+   * @param map          the map
+   * @param trafficLevel the traffic level
    */
   public static void setUniformTurnBasedSpawnPoints(GridMap map,
-                                                    double trafficLevel) {
-    for(SpawnPoint sp : map.getSpawnPoints()) {
+      double trafficLevel) {
+    for (SpawnPoint sp : map.getSpawnPoints()) {
       sp.setVehicleSpecChooser(
-        new UniformSpawnSpecGenerator(trafficLevel,
-                                      new TurnBasedDestinationSelector(map)));
+          new UniformSpawnSpecGenerator(trafficLevel,
+              new TurnBasedDestinationSelector(map)));
     }
   }
 
   /**
    * Set the uniform ratio spawn points with various traffic volume.
    *
-   * @param map                    the map
-   * @param trafficVolumeFileName  the traffic volume filename
+   * @param map                   the map
+   * @param trafficVolumeFileName the traffic volume filename
    */
   public static void setUniformRatioSpawnPoints(GridMap map,
-                                                String trafficVolumeFileName) {
+      String trafficVolumeFileName) {
 
-    TrafficVolume trafficVolume =
-        TrafficVolume.makeFromFile(map, trafficVolumeFileName);
+    TrafficVolume trafficVolume = TrafficVolume.makeFromFile(map, trafficVolumeFileName);
 
     DestinationSelector selector = new RatioDestinationSelector(map,
-                                                                trafficVolume);
+        trafficVolume);
 
     for (SpawnPoint sp : map.getSpawnPoints()) {
       int laneId = sp.getLane().getId();
-      double trafficLevel =
-          trafficVolume.getLeftTurnVolume(laneId) +
+      double trafficLevel = trafficVolume.getLeftTurnVolume(laneId) +
           trafficVolume.getThroughVolume(laneId) +
           trafficVolume.getRightTurnVolume(laneId);
       sp.setVehicleSpecChooser(
@@ -571,52 +564,51 @@ public class GridMapUtil {
    * Set the directional spawn points which has different traffic volumes
    * in different directions.
    *
-   * @param layout         the map
-   * @param hTrafficLevel  the traffic level in the horizontal direction
-   * @param vTrafficLevel  the traffic level in the vertical direction
+   * @param layout        the map
+   * @param hTrafficLevel the traffic level in the horizontal direction
+   * @param vTrafficLevel the traffic level in the vertical direction
    */
   public static void setDirectionalSpawnPoints(GridMap layout,
-                                               double hTrafficLevel,
-                                               double vTrafficLevel) {
-    for(SpawnPoint sp : layout.getHorizontalSpawnPoints()) {
+      double hTrafficLevel,
+      double vTrafficLevel) {
+    for (SpawnPoint sp : layout.getHorizontalSpawnPoints()) {
       sp.setVehicleSpecChooser(
-        new UniformSpawnSpecGenerator(hTrafficLevel,
-                                      new RandomDestinationSelector(layout)));
+          new UniformSpawnSpecGenerator(hTrafficLevel,
+              new RandomDestinationSelector(layout)));
     }
-    for(SpawnPoint sp : layout.getVerticalSpawnPoints()) {
+    for (SpawnPoint sp : layout.getVerticalSpawnPoints()) {
       sp.setVehicleSpecChooser(
-        new UniformSpawnSpecGenerator(vTrafficLevel,
-                                      new RandomDestinationSelector(layout)));
+          new UniformSpawnSpecGenerator(vTrafficLevel,
+              new RandomDestinationSelector(layout)));
     }
   }
 
   /**
    * Set the baseline spawn points.
    *
-   * @param layout          the map
-   * @param traversalTime   the traversal time
+   * @param layout        the map
+   * @param traversalTime the traversal time
    */
   public static void setBaselineSpawnPoints(GridMap layout,
-                                            double traversalTime) {
+      double traversalTime) {
     int totalNumOfLanes = 0;
     int minNumOfLanes = Integer.MAX_VALUE;
-    for(Road r : layout.getRoads()) {
+    for (Road r : layout.getRoads()) {
       int n = r.getLanes().size();
       totalNumOfLanes += n;
       if (n < minNumOfLanes) {
         minNumOfLanes = n;
       }
     }
-    double numOfTraversals =
-      VehicleSpecDatabase.getNumOfSpec() * (totalNumOfLanes - minNumOfLanes);
+    double numOfTraversals = VehicleSpecDatabase.getNumOfSpec() * (totalNumOfLanes - minNumOfLanes);
 
-    for(SpawnPoint sp : layout.getSpawnPoints()) {
+    for (SpawnPoint sp : layout.getSpawnPoints()) {
       sp.setVehicleSpecChooser(
-        new EnumerateSpawnSpecGenerator(
-          sp,
-          layout.getDestinationRoads(),
-          sp.getLane().getId() * traversalTime * numOfTraversals,
-          traversalTime));
+          new EnumerateSpawnSpecGenerator(
+              sp,
+              layout.getDestinationRoads(),
+              sp.getLane().getId() * traversalTime * numOfTraversals,
+              traversalTime));
     }
   }
 
