@@ -58,7 +58,7 @@ public class Main {
         1, // rows
         4, // lane width
         25.0, // speed limit
-        3, // lanes per road
+        1, // lanes per road
         1, // median size
         150, // distance between
         0.28, // traffic level

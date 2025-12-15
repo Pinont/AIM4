@@ -126,11 +126,10 @@ public class GridMapUtil {
           int i = Util.randomIndex(proportion);
           VehicleSpec baseSpec = VehicleSpecDatabase.getVehicleSpecById(i);
 
-          // Generate random scale factors independently for length and width
-          // Length scaling: 0.9 to 1.3
-          double scaleLength = 0.9 + (Util.random.nextDouble() * 0.4);
-          // Width scaling: 0.9 to 1.1 (less variance for width to fit lanes)
-          double scaleWidth = 0.9 + (Util.random.nextDouble() * 0.2);
+          // Enforce size equal to LANE WIDTH as requested
+          double laneWidth = spawnPoint.getLane().getWidth();
+          double fixedLength = laneWidth;
+          double fixedWidth = laneWidth;
 
           VehicleSpec vehicleSpec = new VehicleSpec(
               baseSpec.getName(),
@@ -138,16 +137,15 @@ public class GridMapUtil {
               baseSpec.getMaxDeceleration(),
               baseSpec.getMaxVelocity(),
               baseSpec.getMinVelocity(),
-              baseSpec.getLength() * scaleLength,
-              baseSpec.getWidth() * scaleWidth,
-              baseSpec.getFrontAxleDisplacement() * scaleLength,
-              baseSpec.getRearAxleDisplacement() * scaleLength,
-              baseSpec.getWheelSpan() * scaleWidth,
-              baseSpec.getWheelRadius() * scaleWidth, // Scale radius with width
-              baseSpec.getWheelWidth() * scaleWidth,
+              fixedLength,
+              fixedWidth,
+              fixedLength * 0.25, // Front axle displacement (25% from front)
+              fixedLength * 0.75, // Rear axle displacement (75% from front)
+              fixedWidth * 0.9, // Wheel span (90% of width)
+              fixedWidth * 0.075, // Wheel radius
+              fixedWidth * 0.05, // Wheel width
               baseSpec.getMaxSteeringAngle(),
               baseSpec.getMaxTurnPerSecond());
-
           Road destinationRoad = destinationSelector.selectDestination(spawnPoint.getLane());
 
           // maybe spawnPoint.getCurrentTime() is incorrect
