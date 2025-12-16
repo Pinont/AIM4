@@ -317,8 +317,18 @@ public class AutoDriverOnlySimulator implements Simulator {
       if (!spawnSpecs.isEmpty()) {
         if (canSpawnVehicle(spawnPoint)) {
           for(SpawnSpec spawnSpec : spawnSpecs) {
+            // 1. สร้างรถใหม่จาก spawn specification
             VehicleSimView vehicle = makeVehicle(spawnPoint, spawnSpec);
-            VinRegistry.registerVehicle(vehicle); // Get vehicle a VIN number
+            
+            // 2. ลงทะเบียนรถกับ VinRegistry เพื่อให้ได้หมายเลข VIN (Vehicle Identification Number)
+            //    ซึ่งเป็นตัวบ่งชี้เฉพาะตัวของรถแต่ละคัน
+            VinRegistry.registerVehicle(vehicle);
+            
+            // 3. เรียกฟังก์ชันเพื่อกำหนดสีแบบสุ่มให้รถคันนี้
+            //    สีจะถูกเก็บไว้ใน Debug registry ตาม VIN และจะคงที่ตลอดเดินทาง
+            assignRandomVehicleColor(vehicle);
+            
+            // 4. เพิ่มรถลงในตัวแปร vinToVehicles เพื่อติดตามและควบคุมรถในจำลอง
             vinToVehicles.put(vehicle.getVIN(), vehicle);
             break; // only handle the first spawn vehicle
                    // TODO: need to fix this
@@ -378,6 +388,31 @@ public class AutoDriverOnlySimulator implements Simulator {
     vehicle.setDriver(driver);
 
     return vehicle;
+  }
+
+  /**
+   * Assign a random color to a vehicle.
+   * 
+   * ฟังก์ชันนี้ใช้เพื่อกำหนดสีแบบสุ่มให้รถที่สร้างขึ้นใหม่ โดยสีจะคงที่
+   * ตลอดการเดินทางของรถจนกว่าจะถึงปลายทาง
+   * 
+   * ขั้นตอนการทำงาน:
+   * 1. เลือกสีแบบสุ่มจากอาร์เรย์ 4 สี (แดง เหลือง เขียว น้ำเงิน)
+   * 2. เก็บสีไว้ใน Debug registry โดยใช้หมายเลข VIN เป็นกุญแจ
+   * 3. เมื่อวาดรถบนจอภาพ Canvas จะดึงสีจาก Debug registry
+   *
+   * @param vehicle รถที่ต้องการกำหนดสีให้ (ต้องมี VIN แล้ว)
+   */
+  private void assignRandomVehicleColor(VehicleSimView vehicle) {
+    // สี 4 สีที่ใช้สำหรับแสดงรถ
+    Color[] randomColors = {Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE};
+    
+    // สุ่มเลือกสีจากอาร์เรย์ (0 ถึง 3)
+    int randomIndex = (int) (Math.random() * randomColors.length);
+    
+    // เก็บสีไว้ใน Debug registry ตาม VIN ของรถ
+    // VIN ทำหน้าที่เป็นคีย์ (key) เพื่อติดตามว่าสีไหนสำหรับรถไหน
+    Debug.setVehicleColor(vehicle.getVIN(), randomColors[randomIndex]);
   }
 
 
