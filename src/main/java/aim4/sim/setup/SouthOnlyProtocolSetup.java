@@ -278,25 +278,22 @@ public class SouthOnlyProtocolSetup extends BasicSimSetup {
    * @return true if this spawn point is on the south road
    */
   private boolean isSouthSpawnPoint(SpawnPoint spawnPoint) {
-    // Get the position of the spawn point
-    double spawnY = spawnPoint.getPosition().getY();
-
-    // Find the max Y coordinate of all spawn points
-    List<SpawnPoint> allSpawnPoints = layout.getSpawnPoints();
-
-    double maxY = Double.MIN_VALUE;
-    double minY = Double.MAX_VALUE;
-    for (SpawnPoint sp : allSpawnPoints) {
-      double y = sp.getPosition().getY();
-      maxY = Math.max(maxY, y);
-      minY = Math.min(minY, y);
-    }
-
-    // South spawn points should be at maximum Y (bottom in screen coordinates)
-    // Check if spawn point is in the bottom 25% of the range
-    double range = maxY - minY;
-    double threshold = maxY - (range * 0.1); // Top 10% is considered south
+    // Use the lane's heading to determine direction
+    // South lanes have heading pointing North (approximately 270 degrees or 3π/2)
+    aim4.map.lane.Lane lane = spawnPoint.getLane();
+    double heading = lane.getInitialHeading();
     
-    return spawnY >= threshold;
+    // Normalize heading to [0, 2π)
+    heading = heading % (2 * Math.PI);
+    if (heading < 0) heading += 2 * Math.PI;
+    
+    // South spawn points have vehicles heading North (around 3π/2 or 270°)
+    // Allow some tolerance (±π/4 around 3π/2)
+    double northHeading = 3 * Math.PI / 2; // 270 degrees
+    double tolerance = Math.PI / 4; // 45 degrees
+    
+    boolean isSouth = Math.abs(heading - northHeading) < tolerance;
+    
+    return isSouth;
   }
 }
