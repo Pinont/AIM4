@@ -59,6 +59,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
@@ -147,16 +148,23 @@ public class Canvas extends JPanel implements ComponentListener,
   // Drawing elements for vehicle
   /** The stroke used of vehicles. */
   private static final Stroke VEHICLE_STROKE = new BasicStroke(0.1f);
-  /** The color of ordinary Vehicles. */
-  private static final Color VEHICLE_COLOR = Color.YELLOW;
-  /** The color of vehicles that have reservations. */
+  
+  /**
+   * สีเริ่มต้นของรถ (ใช้เมื่อไม่มีการกำหนดสีแบบสุ่มหรือสถานะพิเศษ)
+   * ป.ส. ในระบบปัจจุบัน สีนี้แทบจะไม่ถูกใช้เพราะสีแบบสุ่มจะถูกกำหนดให้รถทุกคัน
+   */
+  private static final Color VEHICLE_COLOR = Color.GRAY;
+  
+  /** สีของรถที่มีการจองสถานที่แล้ว (ในสถานะรอการปล่อยให้เข้า) */
   private static final Color VEHICLE_HAS_RESERVATION_COLOR = Color.WHITE;
-  /** The color of vehicles that are waiting for a response */
-  private static final Color VEHICLE_WAITING_FOR_RESPONSE_COLOR =
-      Color.blue.brighter().brighter().brighter();
-  /** MARVIN's coloring */
+  
+  /** สีของรถที่รอการตอบสนองจากระบบจัดการอินเตอร์เซคชัน (V2I) */
+  private static final Color VEHICLE_WAITING_FOR_RESPONSE_COLOR = Color.pink;
+  
+  /** VIN พิเศษสำหรับรถ MARVIN (รถทดสอบ/ตัวอักษร) */
   private static final int MARVIN_VEHICLE_VIN = 42;
-  /** MARVIN's color */
+  
+  /** สีของรถ MARVIN */
   private static final Color MARVIN_VEHICLE_COLOR = Color.RED;
   /** The colors that emergency Vehicles cycle through. */
   // private static final Color[] EMERGENCY_VEHICLE_COLORS =
@@ -802,43 +810,56 @@ public class Canvas extends JPanel implements ComponentListener,
   private void drawVehicle(Graphics2D buffer,
                            VehicleSimView vehicle,
                            double currentTime) {
-    // whether the vehicle is selected
+    // ตรวจสอบว่ารถนี้ถูกเลือก (selected) หรือไม่
     boolean selectedVehicle = (Debug.getTargetVIN() == vehicle.getVIN());
-    // check to see if we use another color
+    
+    // ตรวจสอบและกำหนดสีให้รถตามลำดับความสำคัญต่อไปนี้: 
     if (selectedVehicle) {
+      // 1. ถ้ารถถูกเลือก -> ใช้สีส้ม (VEHICLE_SELECTED_COLOR)
       buffer.setPaint(VEHICLE_SELECTED_COLOR);
     } else if (vehicle.getVIN() == MARVIN_VEHICLE_VIN) {
+      // 2. ถ้าเป็น MARVIN vehicle (VIN=42) -> ใช้สีแดง (MARVIN_VEHICLE_COLOR)
       buffer.setPaint(MARVIN_VEHICLE_COLOR);
     } else if (Debug.getVehicleColor(vehicle.getVIN()) != null) {
+      // 3. ถ้ามีสีที่กำหนดไว้ใน Debug registry -> ใช้สีนั้น
+      //    นี่คือที่ที่เก็บสีแบบสุ่มที่กำหนดตอนสร้างรถใหม่
+      //    (สี: แดง เหลือง เขียว น้ำเงิน)
       buffer.setPaint(Debug.getVehicleColor(vehicle.getVIN()));
     } else if (Debug.SHOW_VEHICLE_COLOR_BY_MSG_STATE) {
+      // 4. ถ้าเปิด mode แสดงสีตามสถานะข้อความ -> ตรวจสอบสถานะ
       if (vehicle.getDriver() instanceof AutoDriver) {
         AutoDriver autoDriver = (AutoDriver) vehicle.getDriver();
         if (autoDriver.getCurrentCoordinator() instanceof V2ICoordinator) {
           V2ICoordinator coordinator =
               (V2ICoordinator) autoDriver.getCurrentCoordinator();
           if (coordinator.isAwaitingResponse()) {
+            // รถรอการตอบสนอง -> ใช้สีชมพู
             buffer.setPaint(VEHICLE_WAITING_FOR_RESPONSE_COLOR);
           } else if (coordinator.getReservationParameter() != null) {
+            // รถมีการจองแล้ว -> ใช้สีขาว
             buffer.setPaint(VEHICLE_HAS_RESERVATION_COLOR);
           } else {
-            buffer.setPaint(VEHICLE_COLOR);  // the default color
+            // สถานะปกติ -> ใช้สีเทา
+            buffer.setPaint(VEHICLE_COLOR);
           }
         } else {
-          buffer.setPaint(VEHICLE_COLOR);  // the default color
+          buffer.setPaint(VEHICLE_COLOR);
         }
       } else {
-        buffer.setPaint(VEHICLE_COLOR);  // the default color
+        buffer.setPaint(VEHICLE_COLOR);
       }
     } else {
-      buffer.setPaint(VEHICLE_COLOR);  // the default color
+      // 5. ค่าเริ่มต้น -> ใช้สีเทา (VEHICLE_COLOR)
+      buffer.setPaint(VEHICLE_COLOR);
     }
 
+    // ตั้งค่า stroke (ความหนาของขอบเขตรถ)
     buffer.setStroke(VEHICLE_STROKE);
 
-    // Now draw the vehicle's shape
+    // วาดรถด้วยสีที่เลือก
     buffer.fill(vehicle.getShape());
-    // Draw wheels and stuff if needed
+    
+    // ถ้ารถถูกเลือก -> วาดล้อด้วยสีดำ
     if (selectedVehicle) {
       buffer.setPaint(TIRE_COLOR);
       buffer.setStroke(TIRE_STROKE);
