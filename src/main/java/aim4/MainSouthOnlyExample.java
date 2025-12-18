@@ -32,44 +32,38 @@ package aim4;
 
 import aim4.gui.Viewer;
 import aim4.sim.setup.BasicSimSetup;
+import aim4.sim.setup.SouthOnlyProtocolSetup;
 
 /**
- * The default main class to show the GUI.
+ * Example main class to demonstrate the South-Only Traffic Protocol.
+ * Vehicles enter from the south and exit to north, east, or west directions.
  */
-public class Main {
-
-  /////////////////////////////////
-  // THE MAIN FUNCTION
-  /////////////////////////////////
+public class MainSouthOnlyExample {
 
   /**
-   * The main function of the simulator.
-   * It starts the GUI.
+   * The main function to launch the simulator with south-only protocol.
    *
-   * @param args  the command-line arguments; it should be empty since the GUI
-   *              does not take any command-line arguments
-   *
+   * @param args  the command-line arguments
    */
   public static void main(String[] args) {
 
-    // South-Only Protocol - 1 lane per road
-
+    // Create basic setup for a 1x1 four-way intersection
     BasicSimSetup basicSetup
       = new BasicSimSetup(1, // columns
                           1, // rows
                           4, // lane width
                           25.0, // speed limit
-                          1, // lanes per road (เปลี่ยนเป็น 1)
+                          3, // lanes per road
                           1, // median size
                           150, // distance between
                           0.28, // traffic level
                           1.0 // stop distance before intersection
                           );
 
-    aim4.sim.setup.SouthOnlyProtocolSetup simSetup 
-      = new aim4.sim.setup.SouthOnlyProtocolSetup(basicSetup);
-
-    // Use Viewer with the setup, but pass true to run immediately
-    new Viewer(simSetup, true);
+    // Create the south-only protocol setup
+    SouthOnlyProtocolSetup simSetup = new SouthOnlyProtocolSetup(basicSetup);
+    
+    // Launch the GUI viewer
+    new Viewer(simSetup);
   }
 }
