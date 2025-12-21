@@ -31,10 +31,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package aim4.map.destination;
 
 import java.util.List;
-import java.util.ArrayList;
 
+import aim4.config.Debug;
 import aim4.map.BasicMap;
-import aim4.map.GridMap;
 import aim4.map.Road;
 import aim4.map.lane.Lane;
 import aim4.util.Util;
@@ -42,6 +41,7 @@ import aim4.util.Util;
 /**
  * A destination selector that only allows vehicles from the south
  * and distributes them equally to north, east, and west destinations.
+ * This uses the same logic as RandomDestinationSelector.
  */
 public class SouthOnlyDestinationSelector implements DestinationSelector {
 
@@ -53,11 +53,6 @@ public class SouthOnlyDestinationSelector implements DestinationSelector {
    * The set of roads that a vehicle can use as an ultimate destination.
    */
   private List<Road> destinationRoads;
-  
-  /**
-   * The grid map to access roads for better filtering.
-   */
-  private GridMap gridMap;
 
   /////////////////////////////////
   // CLASS CONSTRUCTORS
@@ -70,10 +65,6 @@ public class SouthOnlyDestinationSelector implements DestinationSelector {
    */
   public SouthOnlyDestinationSelector(BasicMap map) {
     destinationRoads = map.getDestinationRoads();
-    // If it's a GridMap, store it for road-based filtering
-    if (map instanceof GridMap) {
-      this.gridMap = (GridMap) map;
-    }
   }
 
   /////////////////////////////////
@@ -85,61 +76,22 @@ public class SouthOnlyDestinationSelector implements DestinationSelector {
    */
   @Override
   public Road selectDestination(Lane currentLane) {
-    // Only allow vehicles from the south (from the bottom road)
-    // and distribute them to the other three directions (north, east, west)
+    // Use the same logic as RandomDestinationSelector:
+    // Select roads uniformly at random, but will not select a Road 
+    // that is the dual of the starting Road to prevent vehicles 
+    // from simply going back from whence they came.
     
-    System.out.println("[DEBUG] selectDestination called for lane: " + currentLane.getId());
-    System.out.println("[DEBUG] Available destination roads: " + destinationRoads.size());
+    Road currentRoad = Debug.currentMap.getRoad(currentLane);
+    Road dest =
+      destinationRoads.get(Util.random.nextInt(destinationRoads.size()));
     
-    if (destinationRoads == null || destinationRoads.isEmpty()) {
-      System.out.println("[DEBUG] No destination roads available!");
-      return null;
+    // Keep selecting until we find a road that is not the dual of current road
+    while(dest.getDual() == currentRoad) {
+      dest =
+        destinationRoads.get(Util.random.nextInt(destinationRoads.size()));
     }
     
-    // If we have GridMap, use it to find current road and exclude it + dual
-    if (gridMap != null) {
-      List<Road> availableRoads = new ArrayList<>();
-      List<Road> allRoads = gridMap.getRoads();
-      
-      // Get the lane's current road by checking which road contains this lane
-      Road currentRoad = null;
-      for (Road road : allRoads) {
-        if (road.getLanes().contains(currentLane)) {
-          currentRoad = road;
-          break;
-        }
-      }
-      
-      System.out.println("[DEBUG] Current road found: " + (currentRoad != null ? "yes" : "no"));
-      
-      // Add all destination roads except the current one and its dual
-      for (Road road : destinationRoads) {
-        boolean isCurrent = (currentRoad != null && road.equals(currentRoad));
-        boolean isDual = (currentRoad != null && currentRoad.getDual() != null && 
-                         road.equals(currentRoad.getDual()));
-        
-        if (!isCurrent && !isDual) {
-          availableRoads.add(road);
-          System.out.println("[DEBUG] Added destination road");
-        }
-      }
-      
-      System.out.println("[DEBUG] Available roads after filtering current/dual: " + availableRoads.size());
-      
-      if (!availableRoads.isEmpty()) {
-        // Randomly select one of the available destinations
-        int randomIndex = Util.random.nextInt(availableRoads.size());
-        Road selected = availableRoads.get(randomIndex);
-        System.out.println("[DEBUG] Selected road from " + availableRoads.size() + " available");
-        return selected;
-      }
-    }
-    
-    // Fallback: return random destination road
-    int randomIndex = Util.random.nextInt(destinationRoads.size());
-    System.out.println("[DEBUG] Using fallback, selected road index: " + randomIndex);
-    return destinationRoads.get(randomIndex);
+    return dest;
   }
 
 }
-
