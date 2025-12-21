@@ -60,7 +60,7 @@ public class AutoDriverOnlyParamPanel extends JPanel {
     // create the components
 
     trafficRateSlider =
-      new LabeledSlider(0.0, 2500.0,
+      new LabeledSlider(0.0, 3600.0,
                         simSetup.getTrafficLevel() * 3600.0,
                         500.0, 100.0,
                         "Traffic Level: %.0f vehicles/hour/lane",
