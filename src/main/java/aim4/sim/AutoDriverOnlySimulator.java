@@ -350,11 +350,6 @@ public class AutoDriverOnlySimulator implements Simulator {
 
             Debug.setVehicleColor(vehicle.getVIN(), vehicleColor);
 
-            System.err.printf("At time %.2f: Vehicle %d spawned at (%.2f, %.2f) with Size(L:%.2f, W:%.2f) Type: %s\n",
-                currentTime, vehicle.getVIN(),
-                vehicle.getPosition().getX(), vehicle.getPosition().getY(),
-                vehicle.getSpec().getLength(), vehicle.getSpec().getWidth(),
-                vehicleType);
             break; // only handle the first spawn vehicle
                    // TODO: need to fix this
           }
