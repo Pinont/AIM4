@@ -138,6 +138,10 @@ public class Canvas extends JPanel implements ComponentListener,
   private static final String GRASS_TILE_FILE = "/images/grass128.png";
   /** The file name of the file containing the image to use for asphalt. */
   private static final String ASPHALT_TILE_FILE = "/images/asphalt32.png";
+  /** Desired grass tile size in world meters (overridable via -DgrassTileMeters). */
+  private static final double GRASS_TILE_METERS = getDoubleSysProp("grassTileMeters", 32.0);
+  /** Desired asphalt tile size in world meters (overridable via -DasphaltTileMeters). */
+  private static final double ASPHALT_TILE_METERS = getDoubleSysProp("asphaltTileMeters", 4.0);
   /** The color of the grass, if the image does not load properly. */
   public static final Color GRASS_COLOR = Color.GREEN.darker().darker();
   /** The color of the asphalt, if the image does not load properly. */
@@ -527,8 +531,8 @@ public class Canvas extends JPanel implements ComponentListener,
     tf.scale(scale, scale);
     bgBuffer.setTransform(tf);
     // create the textures that depends on the scale
-    TexturePaint grassTexture = makeScaledTexture(grassImage, scale);
-    TexturePaint asphaltTexture = makeScaledTexture(asphaltImage, scale);
+    TexturePaint grassTexture = makeScaledTexture(grassImage, GRASS_TILE_METERS);
+    TexturePaint asphaltTexture = makeScaledTexture(asphaltImage, ASPHALT_TILE_METERS);
     // paint the background with the red color in order to
     // show that no space in the buffer is not redrawn.
     paintEntireBuffer(bgBuffer, Color.RED);
@@ -555,17 +559,32 @@ public class Canvas extends JPanel implements ComponentListener,
    * @param scale  the scaling factor
    * @return the new image
    */
-  private TexturePaint makeScaledTexture(BufferedImage image, double scale) {
+  private TexturePaint makeScaledTexture(BufferedImage image, double tileSizeMeters) {
     if (image != null) {
       // Make sure to scale it properly so it doesn't get all distorted
       Rectangle2D textureRect =
-          new Rectangle2D.Double(0, 0,
-          image.getWidth() / scale,
-          image.getHeight() / scale);
+          new Rectangle2D.Double(0, 0, tileSizeMeters, tileSizeMeters);
       // Now set up an easy-to-refer-to texture.
       return new TexturePaint(image, textureRect);
     } else {
       return null;
+    }
+  }
+
+  /**
+   * Read a double system property with a default value.
+   *
+   * @param key  system property key
+   * @param def  default value when missing/invalid
+   * @return parsed double or default on failure
+   */
+  private static double getDoubleSysProp(String key, double def) {
+    String v = System.getProperty(key);
+    if (v == null) return def;
+    try {
+      return Double.parseDouble(v);
+    } catch (NumberFormatException e) {
+      return def;
     }
   }
 
