@@ -142,6 +142,9 @@ public class AutoDriverOnlySimulator implements Simulator {
     totalBitsReceivedByCompletedVehicles = 0;
   }
 
+  // To cycle through vehicle types
+  private int spawnCounter = 0;
+
   /////////////////////////////////
   // PUBLIC METHODS
   /////////////////////////////////
@@ -318,17 +321,40 @@ public class AutoDriverOnlySimulator implements Simulator {
             VinRegistry.registerVehicle(vehicle); // Get vehicle a VIN number
             vinToVehicles.put(vehicle.getVIN(), vehicle);
 
-            // Assign a random color
-            Color randomColor = new Color(
-                (float) Math.random(),
-                (float) Math.random(),
-                (float) Math.random());
-            Debug.setVehicleColor(vehicle.getVIN(), randomColor);
+            // Cycle through colors/types
+            Color vehicleColor;
+            String vehicleType;
+            switch (spawnCounter % 4) {
+              case 0:
+                vehicleColor = Color.RED;
+                vehicleType = "Electronic";
+                break;
+              case 1:
+                vehicleColor = Color.GREEN;
+                vehicleType = "Food";
+                break;
+              case 2:
+                vehicleColor = Color.BLUE;
+                vehicleType = "Book";
+                break;
+              case 3:
+                vehicleColor = Color.YELLOW;
+                vehicleType = "PrivateObject";
+                break;
+              default:
+                vehicleColor = Color.RED;
+                vehicleType = "Electronic";
+                break;
+            }
+            spawnCounter++;
 
-            System.err.printf("At time %.2f: Vehicle %d spawned at (%.2f, %.2f) with Size(L:%.2f, W:%.2f)\n",
+            Debug.setVehicleColor(vehicle.getVIN(), vehicleColor);
+
+            System.err.printf("At time %.2f: Vehicle %d spawned at (%.2f, %.2f) with Size(L:%.2f, W:%.2f) Type: %s\n",
                 currentTime, vehicle.getVIN(),
                 vehicle.getPosition().getX(), vehicle.getPosition().getY(),
-                vehicle.getSpec().getLength(), vehicle.getSpec().getWidth());
+                vehicle.getSpec().getLength(), vehicle.getSpec().getWidth(),
+                vehicleType);
             break; // only handle the first spawn vehicle
                    // TODO: need to fix this
           }
