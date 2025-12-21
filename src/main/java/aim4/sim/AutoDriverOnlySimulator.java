@@ -140,10 +140,8 @@ public class AutoDriverOnlySimulator implements Simulator {
     numOfCompletedVehicles = 0;
     totalBitsTransmittedByCompletedVehicles = 0;
     totalBitsReceivedByCompletedVehicles = 0;
-  }
 
-  // To cycle through vehicle types
-  private int spawnCounter = 0;
+  }
 
   /////////////////////////////////
   // PUBLIC METHODS
@@ -321,39 +319,49 @@ public class AutoDriverOnlySimulator implements Simulator {
             VinRegistry.registerVehicle(vehicle); // Get vehicle a VIN number
             vinToVehicles.put(vehicle.getVIN(), vehicle);
 
-            // Cycle through colors/types
+            // Determine color/type based on heading
+            // 0 -> East
+            // PI/2 -> South
+            // PI or -PI -> West
+            // -PI/2 -> North
+
+            // Normalize heading to -PI to PI
+            double heading = spawnPoint.getHeading();
+            while (heading > Math.PI)
+              heading -= 2 * Math.PI;
+            while (heading <= -Math.PI)
+              heading += 2 * Math.PI;
+
             Color vehicleColor;
             String vehicleType;
-            switch (spawnCounter % 4) {
-              case 0:
-                vehicleColor = Color.RED;
-                vehicleType = "Electronic";
-                break;
-              case 1:
-                vehicleColor = Color.GREEN;
-                vehicleType = "Food";
-                break;
-              case 2:
-                vehicleColor = Color.BLUE;
-                vehicleType = "Book";
-                break;
-              case 3:
-                vehicleColor = Color.YELLOW;
-                vehicleType = "PrivateObject";
-                break;
-              default:
-                vehicleColor = Color.RED;
-                vehicleType = "Electronic";
-                break;
+
+            // Tolerance for float comparison
+            double e = 0.1;
+
+            if (Math.abs(heading - 0) < e) {
+              // East -> Red
+              vehicleColor = Color.RED;
+              vehicleType = "Electronic";
+            } else if (Math.abs(heading - Math.PI / 2) < e) {
+              // South -> Green
+              vehicleColor = Color.GREEN;
+              vehicleType = "Food";
+            } else if (Math.abs(heading + Math.PI / 2) < e) {
+              // North -> Yellow
+              vehicleColor = Color.YELLOW;
+              vehicleType = "PrivateObject";
+            } else {
+              // West (PI or -PI) -> Blue
+              vehicleColor = Color.BLUE;
+              vehicleType = "Book";
             }
-            spawnCounter++;
 
             Debug.setVehicleColor(vehicle.getVIN(), vehicleColor);
 
-            System.err.printf("At time %.2f: Vehicle %d spawned at (%.2f, %.2f) with Size(L:%.2f, W:%.2f) Type: %s\n",
+            System.err.printf("At time %.2f: Vehicle %d spawned at (%.2f, %.2f) Heading: %.2f Type: %s\n",
                 currentTime, vehicle.getVIN(),
                 vehicle.getPosition().getX(), vehicle.getPosition().getY(),
-                vehicle.getSpec().getLength(), vehicle.getSpec().getWidth(),
+                heading,
                 vehicleType);
             break; // only handle the first spawn vehicle
                    // TODO: need to fix this
