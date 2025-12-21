@@ -146,6 +146,8 @@ public class Canvas extends JPanel implements ComponentListener,
   private static final boolean USE_ASPHALT_TEXTURE_DEFAULT = getBooleanSysProp("useAsphaltTexture", true);
   /** Optional override for asphalt texture file path (overridable via -DasphaltTexture). */
   private static final String ASPHALT_TEXTURE_FILE_PROP = System.getProperty("asphaltTexture", ASPHALT_TILE_FILE);
+  /** Default: whether to draw lane lines; overridable via -DshowLaneLines (default false). */
+  private static final boolean SHOW_LANE_LINES_DEFAULT = getBooleanSysProp("showLaneLines", false);
   /** The color of the grass, if the image does not load properly. */
   public static final Color GRASS_COLOR = Color.GREEN.darker().darker();
   /** The color of the asphalt, if the image does not load properly. */
@@ -323,6 +325,8 @@ public class Canvas extends JPanel implements ComponentListener,
    * debugging shapes.
    */
   private boolean isShowIMDebugShapes;
+  /** Whether to draw white/yellow lane lines. */
+  private boolean showLaneLines;
 
   /////////////////////////////////
   // CLASS CONSTRUCTORS
@@ -350,6 +354,7 @@ public class Canvas extends JPanel implements ComponentListener,
     this.asphaltTileMeters = ASPHALT_TILE_METERS;
     this.useAsphaltTexture = USE_ASPHALT_TEXTURE_DEFAULT;
     this.asphaltTextureFile = ASPHALT_TEXTURE_FILE_PROP;
+    this.showLaneLines = SHOW_LANE_LINES_DEFAULT; // default hidden unless -DshowLaneLines=true
 
     grassImage = loadImage(GRASS_TILE_FILE);
     if (grassImage == null) {
@@ -661,6 +666,21 @@ public class Canvas extends JPanel implements ComponentListener,
   }
 
   /**
+   * Enable/disable drawing of white/yellow lane lines.
+   *
+   * @param show true to draw lane lines, false to hide
+   */
+  public void setShowLaneLines(boolean show) {
+    this.showLaneLines = show;
+    invalidateMapCache();
+  }
+
+  /** Whether white/yellow lane lines are drawn. */
+  public boolean isShowLaneLines() {
+    return this.showLaneLines;
+  }
+
+  /**
    * Invalidate cached map images so they will be regenerated.
    */
   private void invalidateMapCache() {
@@ -698,9 +718,7 @@ public class Canvas extends JPanel implements ComponentListener,
   private static boolean getBooleanSysProp(String key, boolean def) {
     String v = System.getProperty(key);
     if (v == null) return def;
-    if ("true".equalsIgnoreCase(v) || "1".equals(v)) return true;
-    if ("false".equalsIgnoreCase(v) || "0".equals(v)) return false;
-    return def;
+    return "true".equalsIgnoreCase(v) || "1".equals(v);
   }
 
   /**
@@ -747,30 +765,36 @@ public class Canvas extends JPanel implements ComponentListener,
                         Lane lane,
                         TexturePaint asphaltTexture) {
     // Draw the lane itself
+    // fill lane surface (texture or color)
     if (asphaltTexture == null) {
       bgBuffer.setPaint(ASPHALT_COLOR);
     } else {
       bgBuffer.setPaint(asphaltTexture);
     }
     bgBuffer.fill(lane.getShape());
-    // Draw the left boundary
-    if (lane.hasLeftNeighbor()) {
-      bgBuffer.setPaint(LANE_SEPARATOR_COLOR);
-      bgBuffer.setStroke(LANE_SEPARATOR_STROKE);
-    } else {
-      bgBuffer.setPaint(ROAD_BOUNDARY_COLOR);
-      bgBuffer.setStroke(ROAD_BOUNDARY_STROKE);
+
+    // Draw lane boundaries only if enabled
+    if (showLaneLines) {
+      // left boundary
+      if (lane.hasLeftNeighbor()) {
+        bgBuffer.setPaint(LANE_SEPARATOR_COLOR);   // white dashed
+        bgBuffer.setStroke(LANE_SEPARATOR_STROKE);
+      } else {
+        bgBuffer.setPaint(ROAD_BOUNDARY_COLOR);    // yellow solid
+        bgBuffer.setStroke(ROAD_BOUNDARY_STROKE);
+      }
+      bgBuffer.draw(lane.leftBorder());
+
+      // right boundary
+      if (lane.hasRightNeighbor()) {
+        bgBuffer.setPaint(LANE_SEPARATOR_COLOR);   // white dashed
+        bgBuffer.setStroke(LANE_SEPARATOR_STROKE);
+      } else {
+        bgBuffer.setPaint(ROAD_BOUNDARY_COLOR);    // yellow solid
+        bgBuffer.setStroke(ROAD_BOUNDARY_STROKE);
+      }
+      bgBuffer.draw(lane.rightBorder());
     }
-    bgBuffer.draw(lane.leftBorder());
-    // Draw the right boundary
-    if (lane.hasRightNeighbor()) {
-      bgBuffer.setPaint(LANE_SEPARATOR_COLOR);
-      bgBuffer.setStroke(LANE_SEPARATOR_STROKE);
-    } else {
-      bgBuffer.setPaint(ROAD_BOUNDARY_COLOR);
-      bgBuffer.setStroke(ROAD_BOUNDARY_STROKE);
-    }
-    bgBuffer.draw(lane.rightBorder());
   }
 
   /**
