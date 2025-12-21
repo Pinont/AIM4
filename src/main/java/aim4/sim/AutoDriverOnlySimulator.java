@@ -319,18 +319,21 @@ public class AutoDriverOnlySimulator implements Simulator {
             VinRegistry.registerVehicle(vehicle); // Get vehicle a VIN number
             vinToVehicles.put(vehicle.getVIN(), vehicle);
 
-            // Determine color/type based on heading
+            // Determine color/type based on DESTINATION heading
             // 0 -> East
             // PI/2 -> South
             // PI or -PI -> West
             // -PI/2 -> North
 
-            // Normalize heading to -PI to PI
-            double heading = spawnPoint.getHeading();
-            while (heading > Math.PI)
-              heading -= 2 * Math.PI;
-            while (heading <= -Math.PI)
-              heading += 2 * Math.PI;
+            // Get destination road and its heading
+            // Note: Use initial heading of the index lane as a proxy for road direction
+            double destHeading = spawnSpec.getDestinationRoad().getIndexLane().getInitialHeading();
+
+            // Normalize destination heading to -PI to PI (just in case)
+            while (destHeading > Math.PI)
+              destHeading -= 2 * Math.PI;
+            while (destHeading <= -Math.PI)
+              destHeading += 2 * Math.PI;
 
             Color vehicleColor;
             String vehicleType;
@@ -338,30 +341,30 @@ public class AutoDriverOnlySimulator implements Simulator {
             // Tolerance for float comparison
             double e = 0.1;
 
-            if (Math.abs(heading - 0) < e) {
-              // East -> Red
-              vehicleColor = Color.RED;
-              vehicleType = "Electronic";
-            } else if (Math.abs(heading - Math.PI / 2) < e) {
+            if (Math.abs(destHeading - 0) < e) {
+              // East -> Blue
+              vehicleColor = Color.BLUE;
+              vehicleType = "Book";
+            } else if (Math.abs(destHeading - Math.PI / 2) < e) {
               // South -> Green
               vehicleColor = Color.GREEN;
               vehicleType = "Food";
-            } else if (Math.abs(heading + Math.PI / 2) < e) {
+            } else if (Math.abs(destHeading + Math.PI / 2) < e) {
               // North -> Yellow
               vehicleColor = Color.YELLOW;
               vehicleType = "PrivateObject";
             } else {
-              // West (PI or -PI) -> Blue
-              vehicleColor = Color.BLUE;
-              vehicleType = "Book";
+              // West (PI or -PI) -> Red
+              vehicleColor = Color.RED;
+              vehicleType = "Electronic";
             }
 
             Debug.setVehicleColor(vehicle.getVIN(), vehicleColor);
 
-            System.err.printf("At time %.2f: Vehicle %d spawned at (%.2f, %.2f) Heading: %.2f Type: %s\n",
+            System.err.printf("At time %.2f: Vehicle %d spawned at (%.2f, %.2f) DestHeading: %.2f Type: %s\n",
                 currentTime, vehicle.getVIN(),
                 vehicle.getPosition().getX(), vehicle.getPosition().getY(),
-                heading,
+                destHeading,
                 vehicleType);
             break; // only handle the first spawn vehicle
                    // TODO: need to fix this
