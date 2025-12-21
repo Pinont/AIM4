@@ -56,6 +56,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JOptionPane;
 
 import aim4.config.Constants;
 import aim4.config.Debug;
@@ -445,6 +446,12 @@ public class Viewer extends JFrame implements ActionListener, KeyListener,
   private JCheckBoxMenuItem showVinMenuItem;
   /** Menu item for controlling whether to show debug shapes */
   private JCheckBoxMenuItem showIMShapesMenuItem;
+  /** Menu item for toggling asphalt texture usage */
+  private JCheckBoxMenuItem useAsphaltTextureMenuItem;
+  /** Menu item for setting asphalt tile size in meters */
+  private JMenuItem setAsphaltTileSizeMenuItem;
+  /** Menu item for choosing asphalt texture file */
+  private JMenuItem chooseAsphaltTextureMenuItem;
   /** Menu item for clearing simulator's debug point */
   private JMenuItem clearDebugPointsMenuItem;
 
@@ -644,6 +651,19 @@ public class Viewer extends JFrame implements ActionListener, KeyListener,
     showIMShapesMenuItem.addItemListener(this);
     menu.add(showIMShapesMenuItem);
 
+    // View->Use Asphalt Texture
+    useAsphaltTextureMenuItem = new JCheckBoxMenuItem("Use Asphalt Texture", true);
+    useAsphaltTextureMenuItem.addItemListener(this);
+    menu.add(useAsphaltTextureMenuItem);
+    // View->Set Asphalt Tile Size...
+    setAsphaltTileSizeMenuItem = new JMenuItem("Set Asphalt Tile Size...");
+    setAsphaltTileSizeMenuItem.addActionListener(this);
+    menu.add(setAsphaltTileSizeMenuItem);
+    // View->Choose Asphalt Texture...
+    chooseAsphaltTextureMenuItem = new JMenuItem("Choose Asphalt Texture...");
+    chooseAsphaltTextureMenuItem.addActionListener(this);
+    menu.add(chooseAsphaltTextureMenuItem);
+
     // Debug
     menu = new JMenu("Debug");
     menuBar.add(menu);
@@ -775,6 +795,10 @@ public class Viewer extends JFrame implements ActionListener, KeyListener,
     showSimulationTimeMenuItem.setSelected(IS_SHOW_SIMULATION_TIME);
     showVinMenuItem.setSelected(IS_SHOW_VIN_BY_DEFAULT);
     showIMShapesMenuItem.setSelected(IS_SHOW_IM_DEBUG_SHAPES_BY_DEFAULT);
+    // Initialize asphalt UI state based on canvas
+    if (useAsphaltTextureMenuItem != null && canvas != null) {
+      useAsphaltTextureMenuItem.setSelected(canvas.isUseAsphaltTexture());
+    }
   }
 
   /**
@@ -1213,6 +1237,35 @@ public class Viewer extends JFrame implements ActionListener, KeyListener,
       stopUdpListening();
     } else if (e.getSource() == clearDebugPointsMenuItem) {
       Debug.clearLongTermDebugPoints();
+    } else if (e.getSource() == setAsphaltTileSizeMenuItem) {
+      String input = JOptionPane.showInputDialog(this,
+          "Enter asphalt tile size (meters):",
+          "Set Asphalt Tile Size",
+          JOptionPane.PLAIN_MESSAGE);
+      if (input != null) {
+        try {
+          double meters = Double.parseDouble(input.trim());
+          if (meters > 0) {
+            canvas.setAsphaltTileMeters(meters);
+            canvas.update();
+          }
+        } catch (NumberFormatException ex) {
+          // ignore invalid input
+        }
+      }
+    } else if (e.getSource() == chooseAsphaltTextureMenuItem) {
+      JFileChooser chooser = new JFileChooser();
+      chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+      int returnVal = chooser.showDialog(this, "Select Texture");
+      if (returnVal == JFileChooser.APPROVE_OPTION) {
+        try {
+          String path = chooser.getSelectedFile().getCanonicalPath();
+          canvas.setAsphaltTextureFile(path);
+          canvas.update();
+        } catch (IOException ioe) {
+          // ignore
+        }
+      }
     } else if ("Quit".equals(e.getActionCommand())) {
       System.exit(0);
     } // else ignore other events
@@ -1397,6 +1450,10 @@ public class Viewer extends JFrame implements ActionListener, KeyListener,
       } else {
         canvas.setIsShowIMDebugShapes(false);
       }
+      canvas.update();
+    } else if (source == useAsphaltTextureMenuItem) {
+      boolean enabled = (e.getStateChange() == ItemEvent.SELECTED);
+      canvas.setUseAsphaltTexture(enabled);
       canvas.update();
     }
   }
