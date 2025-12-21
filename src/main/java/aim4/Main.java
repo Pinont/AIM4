@@ -46,8 +46,8 @@ public class Main {
    * The main function of the simulator.
    * It starts the GUI.
    *
-   * @param args  the command-line arguments; it should be empty since the GUI
-   *              does not take any command-line arguments
+   * @param args the command-line arguments; it should be empty since the GUI
+   *             does not take any command-line arguments
    *
    */
   public static void main(String[] args) {

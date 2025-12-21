@@ -95,9 +95,9 @@ import java.io.InputStream;
  * Vehicles, and so forth are drawn for the user to see.
  */
 public class Canvas extends JPanel implements ComponentListener,
-                                              MouseListener,
-                                              MouseWheelListener,
-                                              MouseMotionListener {
+    MouseListener,
+    MouseWheelListener,
+    MouseMotionListener {
 
   // ///////////////////////////////
   // CONSTANTS
@@ -110,8 +110,7 @@ public class Canvas extends JPanel implements ComponentListener,
    * AffineTransform, which transforms between Simulator space and Graphics
    * coordinates.
    */
-  private static final AffineTransform IDENTITY_TRANSFORM =
-      new AffineTransform();
+  private static final AffineTransform IDENTITY_TRANSFORM = new AffineTransform();
   /**
    * The factor on the zooming scale for each notch
    */
@@ -127,8 +126,7 @@ public class Canvas extends JPanel implements ComponentListener,
   /**
    * The maximum number of zooming steps
    */
-  private static final int SCALE_NUM =
-      ZOOM_IN_SCALE_NUM + ZOOM_OUT_SCALE_NUM + 1;
+  private static final int SCALE_NUM = ZOOM_IN_SCALE_NUM + ZOOM_OUT_SCALE_NUM + 1;
   /**
    * The margin of the view that must stay on screen.
    */
@@ -148,19 +146,18 @@ public class Canvas extends JPanel implements ComponentListener,
   /** The stroke used of vehicles. */
   private static final Stroke VEHICLE_STROKE = new BasicStroke(0.1f);
   /** The color of ordinary Vehicles. */
-  private static final Color VEHICLE_COLOR = Color.YELLOW;
+  private static final Color VEHICLE_COLOR = Color.BLUE;
   /** The color of vehicles that have reservations. */
   private static final Color VEHICLE_HAS_RESERVATION_COLOR = Color.WHITE;
   /** The color of vehicles that are waiting for a response */
-  private static final Color VEHICLE_WAITING_FOR_RESPONSE_COLOR =
-      Color.blue.brighter().brighter().brighter();
+  private static final Color VEHICLE_WAITING_FOR_RESPONSE_COLOR = Color.blue;
   /** MARVIN's coloring */
   private static final int MARVIN_VEHICLE_VIN = 42;
   /** MARVIN's color */
   private static final Color MARVIN_VEHICLE_COLOR = Color.RED;
   /** The colors that emergency Vehicles cycle through. */
   // private static final Color[] EMERGENCY_VEHICLE_COLORS =
-  //  { Color.RED, Color.BLUE };
+  // { Color.RED, Color.BLUE };
   /**
    * The period, in seconds, that emergency Vehicles take to cycle through
    * each of their Colors. {@value} seconds.
@@ -175,8 +172,7 @@ public class Canvas extends JPanel implements ComponentListener,
   /** The vehicle information string color */
   private static final Color VEHICLE_INFO_STRING_COLOR = Color.RED;
   /** The vehicle information string font */
-  private static final Font VEHICLE_INFO_STRING_FONT =
-      new Font("Monospaced", Font.PLAIN, 5);
+  private static final Font VEHICLE_INFO_STRING_FONT = new Font("Monospaced", Font.PLAIN, 5);
   // Drawing elements for intersections
   /**
    * The color with which to draw the outline of an intersection that uses a
@@ -202,9 +198,9 @@ public class Canvas extends JPanel implements ComponentListener,
    * The stroke used to draw the broken white lines separating the lanes in
    * the same direction on the road.
    */
-  private static final Stroke LANE_SEPARATOR_STROKE =
-      new BasicStroke(.3f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0,
-      new float[]{1, 3}, 0);
+  private static final Stroke LANE_SEPARATOR_STROKE = new BasicStroke(.3f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL,
+      0,
+      new float[] { 1, 3 }, 0);
   // Drawing elements for data collection lines
   /** The color of the data collection lines */
   private static final Color DCL_COLOR = Color.WHITE;
@@ -223,8 +219,7 @@ public class Canvas extends JPanel implements ComponentListener,
   /** Simulation time's string color */
   private static final Color SIMULATION_TIME_STRING_COLOR = Color.YELLOW;
   /** Simulation time's font */
-  private static final Font SIMULATION_TIME_STRING_FONT =
-      new Font("Monospaced", Font.PLAIN, 18);
+  private static final Font SIMULATION_TIME_STRING_FONT = new Font("Monospaced", Font.PLAIN, 18);
   /** Simulation time location X */
   private static final int SIMULATION_TIME_LOCATION_X = 12;
   /** Simulation time location Y */
@@ -233,14 +228,12 @@ public class Canvas extends JPanel implements ComponentListener,
   /** The color of the highlighted vehicle */
   private static final Color HIGHLIGHTED_VEHICLE_COLOR = Color.GREEN;
   /** The stroke of the highlighted vehicle */
-  private static final Stroke HIGHLIGHTED_VEHICLE_STROKE =
-      new BasicStroke(0.3f);
+  private static final Stroke HIGHLIGHTED_VEHICLE_STROKE = new BasicStroke(0.3f);
   // Debug points
   /** Debut point stroke */
   private static final Stroke DEBUG_POINT_STROKE = new BasicStroke(0.3f);
   /** Debut point font */
-  private static final Font DEBUG_POINT_FONT =
-      new Font("Monospaced", Font.PLAIN, 5);
+  private static final Font DEBUG_POINT_FONT = new Font("Monospaced", Font.PLAIN, 5);
   /**
    * The radius, in meters, of the circles used to display DriverAgents'
    * DebugPoints. {@value} meters.
@@ -311,6 +304,7 @@ public class Canvas extends JPanel implements ComponentListener,
   /////////////////////////////////
   // CLASS CONSTRUCTORS
   /////////////////////////////////
+
   /**
    * Create a new canvas.
    *
@@ -359,7 +353,7 @@ public class Canvas extends JPanel implements ComponentListener,
   /**
    * Load an image from an image file.
    *
-   * @param imageFileName  the path to the image file
+   * @param imageFileName the path to the image file
    * @return the image object
    */
   private BufferedImage loadImage(String imageFileName) {
@@ -378,7 +372,7 @@ public class Canvas extends JPanel implements ComponentListener,
   /**
    * Initialize the canvas with a given map.
    *
-   * @param basicMap  the layout the canvas will be visualizing
+   * @param basicMap the layout the canvas will be visualizing
    */
   public void initWithGivenMap(BasicMap basicMap) {
     this.basicMap = basicMap;
@@ -402,8 +396,7 @@ public class Canvas extends JPanel implements ComponentListener,
       mapImageTable[i] = null;
     }
     // create the map image for the initial scale
-    mapImageTable[scaleIndex] =
-        createMapImage(basicMap, scaleTable[scaleIndex]);
+    mapImageTable[scaleIndex] = createMapImage(basicMap, scaleTable[scaleIndex]);
 
     canUpdateCanvas = true;
   }
@@ -459,7 +452,7 @@ public class Canvas extends JPanel implements ComponentListener,
           posOfOriginX = VIEW_MARGIN - w;
         }
       }
-    }  // else just do nothing
+    } // else just do nothing
     if (getHeight() >= VIEW_MARGIN) {
       if (posOfOriginY > getHeight() - VIEW_MARGIN) {
         posOfOriginY = getHeight() - VIEW_MARGIN;
@@ -469,7 +462,7 @@ public class Canvas extends JPanel implements ComponentListener,
           posOfOriginY = VIEW_MARGIN - w;
         }
       }
-    }  // else just do nothing
+    } // else just do nothing
   }
 
   /**
@@ -492,16 +485,15 @@ public class Canvas extends JPanel implements ComponentListener,
   }
 
   /**
-   * Get the map image at a given scale index.  If the map image does not
+   * Get the map image at a given scale index. If the map image does not
    * exist in the cache, create it.
    *
-   * @param scaleIndex  the scale index
+   * @param scaleIndex the scale index
    * @return the map image at the given scale index
    */
   private Image getMapImageTable(int scaleIndex) {
     if (mapImageTable[scaleIndex] == null) {
-      mapImageTable[scaleIndex] =
-          createMapImage(basicMap, scaleTable[scaleIndex]);
+      mapImageTable[scaleIndex] = createMapImage(basicMap, scaleTable[scaleIndex]);
     }
     return mapImageTable[scaleIndex];
   }
@@ -509,11 +501,12 @@ public class Canvas extends JPanel implements ComponentListener,
   /////////////////////////////////
   // PRIVATE METHODS
   /////////////////////////////////
+
   /**
    * Create a background image for the given Layout.
    *
-   * @param map  the Layout for which to create a background image
-   *        s    the scale of the map
+   * @param map the Layout for which to create a background image
+   *            s the scale of the map
    */
   private Image createMapImage(BasicMap map, double scale) {
     Rectangle2D mapRect = basicMap.getDimensions();
@@ -551,15 +544,14 @@ public class Canvas extends JPanel implements ComponentListener,
   /**
    * Create a scaled image.
    *
-   * @param image  the image object
-   * @param scale  the scaling factor
+   * @param image the image object
+   * @param scale the scaling factor
    * @return the new image
    */
   private TexturePaint makeScaledTexture(BufferedImage image, double scale) {
     if (image != null) {
       // Make sure to scale it properly so it doesn't get all distorted
-      Rectangle2D textureRect =
-          new Rectangle2D.Double(0, 0,
+      Rectangle2D textureRect = new Rectangle2D.Double(0, 0,
           image.getWidth() / scale,
           image.getHeight() / scale);
       // Now set up an easy-to-refer-to texture.
@@ -572,13 +564,13 @@ public class Canvas extends JPanel implements ComponentListener,
   /**
    * Paint the rectangle with the grass picture.
    *
-   * @param buffer        the image buffer
-   * @param rect          the rectangle
-   * @param grassTexture  the grass texture
+   * @param buffer       the image buffer
+   * @param rect         the rectangle
+   * @param grassTexture the grass texture
    */
   private void drawGrass(Graphics2D buffer,
-                         Rectangle2D rect,
-                         TexturePaint grassTexture) {
+      Rectangle2D rect,
+      TexturePaint grassTexture) {
     // draw the grass everywhere
     if (grassTexture == null) {
       buffer.setPaint(GRASS_COLOR); // no need to set the stroke
@@ -591,12 +583,12 @@ public class Canvas extends JPanel implements ComponentListener,
   /**
    * Draw a road on the display buffer.
    *
-   * @param bgBuffer        the display buffer
-   * @param road            the road
-   * @param asphaltTexture  the grass texture
+   * @param bgBuffer       the display buffer
+   * @param road           the road
+   * @param asphaltTexture the grass texture
    */
   private void drawRoad(Graphics2D bgBuffer, Road road,
-                        TexturePaint asphaltTexture) {
+      TexturePaint asphaltTexture) {
     for (Lane lane : road.getLanes()) {
       drawLane(bgBuffer, lane, asphaltTexture);
     }
@@ -605,13 +597,13 @@ public class Canvas extends JPanel implements ComponentListener,
   /**
    * Draw a lane on the display buffer.
    *
-   * @param bgBuffer        the display buffer
-   * @param lane            the lane
-   * @param asphaltTexture  the asphalt texture
+   * @param bgBuffer       the display buffer
+   * @param lane           the lane
+   * @param asphaltTexture the asphalt texture
    */
   private void drawLane(Graphics2D bgBuffer,
-                        Lane lane,
-                        TexturePaint asphaltTexture) {
+      Lane lane,
+      TexturePaint asphaltTexture) {
     // Draw the lane itself
     if (asphaltTexture == null) {
       bgBuffer.setPaint(ASPHALT_COLOR);
@@ -642,13 +634,13 @@ public class Canvas extends JPanel implements ComponentListener,
   /**
    * Draw an intersection on the display buffer.
    *
-   * @param bgBuffer        the display buffer
-   * @param im              the intersection manager
-   * @param asphaltTexture  the asphaltTexture
+   * @param bgBuffer       the display buffer
+   * @param im             the intersection manager
+   * @param asphaltTexture the asphaltTexture
    */
   private void drawIntersectionManager(Graphics2D bgBuffer,
-                                       IntersectionManager im,
-                                       TexturePaint asphaltTexture) {
+      IntersectionManager im,
+      TexturePaint asphaltTexture) {
 
     boolean selected = (Debug.getTargetIMid() == im.getId());
 
@@ -675,11 +667,11 @@ public class Canvas extends JPanel implements ComponentListener,
   /**
    * Draw the data collection lines.
    *
-   * @param bgBuffer             the display buffer
-   * @param dataCollectionLines  the list of data collection lines
+   * @param bgBuffer            the display buffer
+   * @param dataCollectionLines the list of data collection lines
    */
   private void drawDataCollectionLines(Graphics2D bgBuffer,
-                                       List<DataCollectionLine> dataCollectionLines) {
+      List<DataCollectionLine> dataCollectionLines) {
     for (DataCollectionLine line : dataCollectionLines) {
       bgBuffer.setPaint(DCL_COLOR);
       bgBuffer.setStroke(DCL_STROKE);
@@ -690,6 +682,7 @@ public class Canvas extends JPanel implements ComponentListener,
   /////////////////////////////////
   // PUBLIC METHODS
   /////////////////////////////////
+
   /**
    * Clean up the canvas
    */
@@ -727,8 +720,7 @@ public class Canvas extends JPanel implements ComponentListener,
     Simulator sim = viewer.getSimulator();
     // if the simulator exists, draw the current view
     if (sim != null) {
-      Collection<IntersectionManager> ims =
-          sim.getMap().getIntersectionManagers();
+      Collection<IntersectionManager> ims = sim.getMap().getIntersectionManagers();
       // draw the intersection managers' debug shapes
       if (isShowIMDebugShapes) {
         for (IntersectionManager im : ims) {
@@ -774,11 +766,12 @@ public class Canvas extends JPanel implements ComponentListener,
   /////////////////////////////////
   // PRIVATE METHODS
   /////////////////////////////////
+
   /**
    * Draw an image on screen.
    *
-   * @param buffer  the display buffer
-   * @param image   the image
+   * @param buffer the display buffer
+   * @param image  the image
    */
   private void drawImageOnBuffer(Graphics2D buffer, Image image) {
     // Save the current transform so we can restore it.
@@ -795,13 +788,13 @@ public class Canvas extends JPanel implements ComponentListener,
    * Draw an individual Vehicle, and any associated debug information, if this
    * Vehicle is a debug Vehicle.
    *
-   * @param buffer       the display buffer
-   * @param vehicle      the Vehicle to draw now
-   * @param currentTime  the current simulated time
+   * @param buffer      the display buffer
+   * @param vehicle     the Vehicle to draw now
+   * @param currentTime the current simulated time
    */
   private void drawVehicle(Graphics2D buffer,
-                           VehicleSimView vehicle,
-                           double currentTime) {
+      VehicleSimView vehicle,
+      double currentTime) {
     // whether the vehicle is selected
     boolean selectedVehicle = (Debug.getTargetVIN() == vehicle.getVIN());
     // check to see if we use another color
@@ -815,23 +808,22 @@ public class Canvas extends JPanel implements ComponentListener,
       if (vehicle.getDriver() instanceof AutoDriver) {
         AutoDriver autoDriver = (AutoDriver) vehicle.getDriver();
         if (autoDriver.getCurrentCoordinator() instanceof V2ICoordinator) {
-          V2ICoordinator coordinator =
-              (V2ICoordinator) autoDriver.getCurrentCoordinator();
+          V2ICoordinator coordinator = (V2ICoordinator) autoDriver.getCurrentCoordinator();
           if (coordinator.isAwaitingResponse()) {
             buffer.setPaint(VEHICLE_WAITING_FOR_RESPONSE_COLOR);
           } else if (coordinator.getReservationParameter() != null) {
             buffer.setPaint(VEHICLE_HAS_RESERVATION_COLOR);
           } else {
-            buffer.setPaint(VEHICLE_COLOR);  // the default color
+            buffer.setPaint(VEHICLE_COLOR); // the default color
           }
         } else {
-          buffer.setPaint(VEHICLE_COLOR);  // the default color
+          buffer.setPaint(VEHICLE_COLOR); // the default color
         }
       } else {
-        buffer.setPaint(VEHICLE_COLOR);  // the default color
+        buffer.setPaint(VEHICLE_COLOR); // the default color
       }
     } else {
-      buffer.setPaint(VEHICLE_COLOR);  // the default color
+      buffer.setPaint(VEHICLE_COLOR); // the default color
     }
 
     buffer.setStroke(VEHICLE_STROKE);
@@ -851,13 +843,13 @@ public class Canvas extends JPanel implements ComponentListener,
   /**
    * Draw the information string of the vehicle on screen
    *
-   * @param buffer       the display buffer
-   * @param vehicle      the vehicle
-   * @param currentTime  the current simulated time
+   * @param buffer      the display buffer
+   * @param vehicle     the vehicle
+   * @param currentTime the current simulated time
    */
   private void drawVehicleInfoString(Graphics2D buffer,
-                                     VehicleSimView vehicle,
-                                     double currentTime) {
+      VehicleSimView vehicle,
+      double currentTime) {
     List<String> infos = new LinkedList<String>();
 
     // display the vin
@@ -869,21 +861,18 @@ public class Canvas extends JPanel implements ComponentListener,
         && vehicle.getDriver() instanceof AutoDriver) {
       AutoDriver da = (AutoDriver) vehicle.getDriver();
       if (da.getCurrentCoordinator() instanceof V2ICoordinator) {
-        V2ICoordinator coordinator =
-            (V2ICoordinator) da.getCurrentCoordinator();
+        V2ICoordinator coordinator = (V2ICoordinator) da.getCurrentCoordinator();
 
         // display the arrival time of the request (if any)
         if (Debug.SHOW_ARRIVAL_TIME) {
           if (coordinator.isAwaitingResponse()
               || coordinator.getReservationParameter() != null) {
-            V2IMessage msg =
-                ((AutoVehicleSimView) vehicle).getLastV2IMessage();
+            V2IMessage msg = ((AutoVehicleSimView) vehicle).getLastV2IMessage();
             if (msg instanceof Request) {
               Request request = (Request) msg;
               if (request.getProposals().size() > 0) {
                 // one arrival time is enough.
-                double arrival_time =
-                    request.getProposals().get(0).getArrivalTime();
+                double arrival_time = request.getProposals().get(0).getArrivalTime();
                 infos.add(String.format("%.2f", arrival_time));
               } else {
                 infos.add("No Proposals");
@@ -895,14 +884,12 @@ public class Canvas extends JPanel implements ComponentListener,
         if (Debug.SHOW_REMAINING_ARRIVAL_TIME) {
           if (coordinator.isAwaitingResponse()
               || coordinator.getReservationParameter() != null) {
-            V2IMessage msg =
-                ((AutoVehicleSimView) vehicle).getLastV2IMessage();
+            V2IMessage msg = ((AutoVehicleSimView) vehicle).getLastV2IMessage();
             if (msg instanceof Request) {
               Request request = (Request) msg;
               if (request.getProposals().size() > 0) {
                 // one arrival time is enough.
-                double arrival_time =
-                    request.getProposals().get(0).getArrivalTime();
+                double arrival_time = request.getProposals().get(0).getArrivalTime();
                 if (coordinator.getReservationParameter() == null
                     || arrival_time - currentTime >= 0) {
                   infos.add(String.format("%.2f", arrival_time - currentTime));
@@ -929,8 +916,8 @@ public class Canvas extends JPanel implements ComponentListener,
   /**
    * Draw the current state of the lights for all IntersectionManagers.
    *
-   * @param buffer  the display buffer
-   * @param im      the intersection manager whose traffic lights to draw
+   * @param buffer the display buffer
+   * @param im     the intersection manager whose traffic lights to draw
    */
   private void drawTrafficLights(Graphics2D buffer, IntersectionManager im) {
     if (im instanceof V2IManager) {
@@ -938,35 +925,34 @@ public class Canvas extends JPanel implements ComponentListener,
       if (policy instanceof BasePolicy) {
         BasePolicy basePolicy = (BasePolicy) policy;
         if (basePolicy.getRequestHandler() instanceof TrafficSignalRequestHandler) {
-          TrafficSignalRequestHandler requestHandler =
-              (TrafficSignalRequestHandler) basePolicy.getRequestHandler();
+          TrafficSignalRequestHandler requestHandler = (TrafficSignalRequestHandler) basePolicy.getRequestHandler();
           for (Lane entryLane : im.getIntersection().getEntryLanes()) {
             switch (requestHandler.getSignal(entryLane.getId())) {
-            case GREEN:
-              buffer.setPaint(Color.GREEN);
-              break;
-            case YELLOW:
-              buffer.setPaint(Color.YELLOW);
-              break;
-            case RED:
-              buffer.setPaint(Color.RED);
-              break;
-            default:
-              throw new RuntimeException("Unknown traffic signals.\n");
+              case GREEN:
+                buffer.setPaint(Color.GREEN);
+                break;
+              case YELLOW:
+                buffer.setPaint(Color.YELLOW);
+                break;
+              case RED:
+                buffer.setPaint(Color.RED);
+                break;
+              default:
+                throw new RuntimeException("Unknown traffic signals.\n");
             }
             // Now create the shape we will use to draw the light
             // For some reason, Java's angles increase to the right instead of
             // to the left
             // TODO: cache it
-            Arc2D lightShape =
-                new Arc2D.Double(im.getIntersection().getEntryPoint(entryLane).getX()
+            Arc2D lightShape = new Arc2D.Double(im.getIntersection().getEntryPoint(entryLane).getX()
                 - TRAFFIC_LIGHT_RADIUS, // x
                 im.getIntersection().getEntryPoint(entryLane).getY()
-                - TRAFFIC_LIGHT_RADIUS, // y
+                    - TRAFFIC_LIGHT_RADIUS, // y
                 TRAFFIC_LIGHT_RADIUS * 2, // width
                 TRAFFIC_LIGHT_RADIUS * 2, // height
                 90 - // start
-                Math.toDegrees(im.getIntersection().getEntryHeading(entryLane)), 180.0, // extent
+                    Math.toDegrees(im.getIntersection().getEntryHeading(entryLane)),
+                180.0, // extent
                 Arc2D.PIE); // type
             // Now draw it!
             buffer.fill(lightShape);
@@ -981,8 +967,8 @@ public class Canvas extends JPanel implements ComponentListener,
    * are usually things like used tiles for a tile-based reservation policy,
    * current heuristic values and so forth.
    *
-   * @param buffer  the display buffer
-   * @param im      the intersection manager whose debug shapes to draw
+   * @param buffer the display buffer
+   * @param im     the intersection manager whose debug shapes to draw
    */
   private void drawIMDebugShapes(Graphics2D buffer, IntersectionManager im) {
     for (Shape s : im.getDebugShapes()) {
@@ -994,8 +980,8 @@ public class Canvas extends JPanel implements ComponentListener,
   /**
    * Draw the simulation time.
    *
-   * @param buffer       the display buffer
-   * @param currentTime  the time
+   * @param buffer      the display buffer
+   * @param currentTime the time
    */
   private void drawSimulationTime(Graphics2D buffer, double currentTime) {
     // Save the current transform so we can restore it.
@@ -1015,11 +1001,11 @@ public class Canvas extends JPanel implements ComponentListener,
   /**
    * Draw a series of debug points.
    *
-   * @param buffer       the display buffer
-   * @param debugPoints  a set of debug points
+   * @param buffer      the display buffer
+   * @param debugPoints a set of debug points
    */
   private void drawDebugPoints(Graphics2D buffer,
-                               List<DebugPoint> debugPoints) {
+      List<DebugPoint> debugPoints) {
     for (DebugPoint p : debugPoints) {
       drawDebugPoint(buffer, p);
     }
@@ -1028,8 +1014,8 @@ public class Canvas extends JPanel implements ComponentListener,
   /**
    * Draw a debug point.
    *
-   * @param buffer  the display buffer
-   * @param p       a debug point
+   * @param buffer the display buffer
+   * @param p      a debug point
    */
   private void drawDebugPoint(Graphics2D buffer, DebugPoint p) {
     if (p.getPoint() != null) {
@@ -1061,7 +1047,7 @@ public class Canvas extends JPanel implements ComponentListener,
   /**
    * Draw the tracks.
    *
-   * @param buffer  the display buffer
+   * @param buffer the display buffer
    */
   private void drawTracks(Graphics2D buffer) {
     PathTrack track = new PathTrack();
@@ -1074,7 +1060,6 @@ public class Canvas extends JPanel implements ComponentListener,
     track.add(new ArcTrack(new WayPoint(200, 50),
         new WayPoint(250, 100),
         new WayPoint(200, 100), false));
-
 
     buffer.setPaint(TRACK_COLOR);
     buffer.setStroke(TRACK_STROKE);
@@ -1276,7 +1261,7 @@ public class Canvas extends JPanel implements ComponentListener,
   /**
    * Set whether or not the canvas draws the IM shapes.
    *
-   * @param useIMDebugShapes  whether or not the canvas should draw the shapes
+   * @param useIMDebugShapes whether or not the canvas should draw the shapes
    */
   public void setIsShowIMDebugShapes(boolean useIMDebugShapes) {
     this.isShowIMDebugShapes = useIMDebugShapes;
@@ -1285,7 +1270,7 @@ public class Canvas extends JPanel implements ComponentListener,
   /**
    * Save the screen to a file in PNG format.
    *
-   * @param outFileName  the output file name
+   * @param outFileName the output file name
    */
   public void saveScreenShot(String outFileName) {
     File outfile = new File(outFileName);
@@ -1302,8 +1287,8 @@ public class Canvas extends JPanel implements ComponentListener,
   /**
    * Convert the position on screen to the position on the map.
    *
-   * @param screenPosX  The x-coordinate of the screen position
-   * @param screenPosY  The y-coordinate of the screen position
+   * @param screenPosX The x-coordinate of the screen position
+   * @param screenPosY The y-coordinate of the screen position
    *
    * @return The corresponding position on the map; null if there is no map
    */
@@ -1320,7 +1305,7 @@ public class Canvas extends JPanel implements ComponentListener,
   /**
    * Highlight a particular vehicle.
    *
-   * @param vin  the VIN number of the vehicle
+   * @param vin the VIN number of the vehicle
    */
   public void highlightVehicle(int vin) {
     Simulator sim = viewer.getSimulator();
