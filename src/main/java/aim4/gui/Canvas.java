@@ -136,6 +136,16 @@ public class Canvas extends JPanel implements ComponentListener,
   private static final String GRASS_TILE_FILE = "/images/grass128.png";
   /** The file name of the file containing the image to use for asphalt. */
   private static final String ASPHALT_TILE_FILE = "/images/asphalt32.png";
+  /** Desired grass tile size in world meters (overridable via -DgrassTileMeters). */
+  private static final double GRASS_TILE_METERS = getDoubleSysProp("grassTileMeters", 32.0);
+  /** Desired asphalt tile size in world meters (overridable via -DasphaltTileMeters). */
+  private static final double ASPHALT_TILE_METERS = getDoubleSysProp("asphaltTileMeters", 4.0);
+  /** Whether asphalt texture should be used (overridable via -DuseAsphaltTexture). */
+  private static final boolean USE_ASPHALT_TEXTURE_DEFAULT = getBooleanSysProp("useAsphaltTexture", true);
+  /** Optional override for asphalt texture file path (overridable via -DasphaltTexture). */
+  private static final String ASPHALT_TEXTURE_FILE_PROP = System.getProperty("asphaltTexture", ASPHALT_TILE_FILE);
+  /** Default: whether to draw lane lines; overridable via -DshowLaneLines (default false). */
+  private static final boolean SHOW_LANE_LINES_DEFAULT = getBooleanSysProp("showLaneLines", false);
   /** The color of the grass, if the image does not load properly. */
   public static final Color GRASS_COLOR = Color.GREEN.darker().darker();
   /** The color of the asphalt, if the image does not load properly. */
@@ -265,6 +275,14 @@ public class Canvas extends JPanel implements ComponentListener,
   private BufferedImage grassImage;
   /** The image for asphalt texture. */
   private BufferedImage asphaltImage;
+  /** Runtime-configurable asphalt tile size in meters. */
+  private double asphaltTileMeters;
+  /** Runtime-configurable grass tile size in meters. */
+  private double grassTileMeters;
+  /** Whether to use asphalt texture instead of solid color. */
+  private boolean useAsphaltTexture;
+  /** Asphalt texture file path (classpath resource or filesystem path). */
+  private String asphaltTextureFile;
   /**
    * A cache of the background so that we do not need to redraw it every time
    * a vehicle moves.
@@ -300,6 +318,8 @@ public class Canvas extends JPanel implements ComponentListener,
    * debugging shapes.
    */
   private boolean isShowIMDebugShapes;
+  /** Whether to draw white/yellow lane lines. */
+  private boolean showLaneLines;
 
   /////////////////////////////////
   // CLASS CONSTRUCTORS
@@ -323,13 +343,20 @@ public class Canvas extends JPanel implements ComponentListener,
     lastCursorX = -1;
     lastCursorY = -1;
 
+    // initialize runtime-configurable fields
+    this.grassTileMeters = GRASS_TILE_METERS;
+    this.asphaltTileMeters = ASPHALT_TILE_METERS;
+    this.useAsphaltTexture = USE_ASPHALT_TEXTURE_DEFAULT;
+    this.asphaltTextureFile = ASPHALT_TEXTURE_FILE_PROP;
+    this.showLaneLines = SHOW_LANE_LINES_DEFAULT; // default hidden unless -DshowLaneLines=true
+
     grassImage = loadImage(GRASS_TILE_FILE);
     if (grassImage == null) {
       System.err.println("Could not load image from file: " + GRASS_TILE_FILE);
     }
-    asphaltImage = loadImage(ASPHALT_TILE_FILE);
+    asphaltImage = loadImage(this.asphaltTextureFile);
     if (asphaltImage == null) {
-      System.err.println("Could not load image from file: " + ASPHALT_TILE_FILE);
+      System.err.println("Could not load image from file: " + this.asphaltTextureFile);
     }
 
     mapImageTable = null;
@@ -363,6 +390,14 @@ public class Canvas extends JPanel implements ComponentListener,
       try {
         image = ImageIO.read(is);
       } catch (IOException e) {
+        image = null;
+      }
+    }
+    // Fallback: try filesystem path if classpath resource not found
+    if (image == null) {
+      try {
+        image = ImageIO.read(new File(imageFileName));
+      } catch (IOException ioe) {
         image = null;
       }
     }
@@ -520,8 +555,10 @@ public class Canvas extends JPanel implements ComponentListener,
     tf.scale(scale, scale);
     bgBuffer.setTransform(tf);
     // create the textures that depends on the scale
-    TexturePaint grassTexture = makeScaledTexture(grassImage, scale);
-    TexturePaint asphaltTexture = makeScaledTexture(asphaltImage, scale);
+    TexturePaint grassTexture = makeScaledTexture(grassImage, grassTileMeters);
+    TexturePaint asphaltTexture = useAsphaltTexture
+      ? makeScaledTexture(asphaltImage, asphaltTileMeters)
+      : null;
     // paint the background with the red color in order to
     // show that no space in the buffer is not redrawn.
     paintEntireBuffer(bgBuffer, Color.RED);
@@ -548,17 +585,133 @@ public class Canvas extends JPanel implements ComponentListener,
    * @param scale the scaling factor
    * @return the new image
    */
-  private TexturePaint makeScaledTexture(BufferedImage image, double scale) {
+  private TexturePaint makeScaledTexture(BufferedImage image, double tileSizeMeters) {
     if (image != null) {
       // Make sure to scale it properly so it doesn't get all distorted
-      Rectangle2D textureRect = new Rectangle2D.Double(0, 0,
-          image.getWidth() / scale,
-          image.getHeight() / scale);
+      Rectangle2D textureRect =
+          new Rectangle2D.Double(0, 0, tileSizeMeters, tileSizeMeters);
       // Now set up an easy-to-refer-to texture.
       return new TexturePaint(image, textureRect);
     } else {
       return null;
     }
+  }
+
+  /**
+   * Set whether asphalt texture is used. Passing false will render asphalt
+   * using the solid ASPHALT_COLOR.
+   *
+   * @param useTexture true to use texture, false for solid color
+   */
+  public void setUseAsphaltTexture(boolean useTexture) {
+    this.useAsphaltTexture = useTexture;
+    invalidateMapCache();
+  }
+
+  /**
+   * Get whether asphalt texture is currently enabled.
+   *
+   * @return true if texture is enabled
+   */
+  public boolean isUseAsphaltTexture() {
+    return useAsphaltTexture;
+  }
+
+  /**
+   * Set asphalt tile size in meters. Must be positive.
+   *
+   * @param meters tile size in world meters
+   */
+  public void setAsphaltTileMeters(double meters) {
+    if (meters > 0) {
+      this.asphaltTileMeters = meters;
+      invalidateMapCache();
+    }
+  }
+
+  /**
+   * Set grass tile size in meters. Must be positive.
+   *
+   * @param meters tile size in world meters
+   */
+  public void setGrassTileMeters(double meters) {
+    if (meters > 0) {
+      this.grassTileMeters = meters;
+      invalidateMapCache();
+    }
+  }
+
+  /**
+   * Set asphalt texture file path (classpath resource or filesystem path).
+   * Attempts to reload the image immediately.
+   *
+   * @param path texture path
+   */
+  public void setAsphaltTextureFile(String path) {
+    if (path != null && !path.isEmpty()) {
+      this.asphaltTextureFile = path;
+      this.asphaltImage = loadImage(this.asphaltTextureFile);
+      if (this.asphaltImage == null) {
+        System.err.println("Could not load asphalt texture from: " + this.asphaltTextureFile);
+      }
+      invalidateMapCache();
+    }
+  }
+
+  /**
+   * Enable/disable drawing of white/yellow lane lines.
+   *
+   * @param show true to draw lane lines, false to hide
+   */
+  public void setShowLaneLines(boolean show) {
+    this.showLaneLines = show;
+    invalidateMapCache();
+  }
+
+  /** Whether white/yellow lane lines are drawn. */
+  public boolean isShowLaneLines() {
+    return this.showLaneLines;
+  }
+
+  /**
+   * Invalidate cached map images so they will be regenerated.
+   */
+  private void invalidateMapCache() {
+    if (mapImageTable != null) {
+      for (int i = 0; i < mapImageTable.length; i++) {
+        mapImageTable[i] = null;
+      }
+    }
+  }
+
+  /**
+   * Read a double system property with a default value.
+   *
+   * @param key  system property key
+   * @param def  default value when missing/invalid
+   * @return parsed double or default on failure
+   */
+  private static double getDoubleSysProp(String key, double def) {
+    String v = System.getProperty(key);
+    if (v == null) return def;
+    try {
+      return Double.parseDouble(v);
+    } catch (NumberFormatException e) {
+      return def;
+    }
+  }
+
+  /**
+   * Read a boolean system property with a default value.
+   *
+   * @param key  system property key
+   * @param def  default value when missing/invalid
+   * @return parsed boolean or default on failure
+   */
+  private static boolean getBooleanSysProp(String key, boolean def) {
+    String v = System.getProperty(key);
+    if (v == null) return def;
+    return "true".equalsIgnoreCase(v) || "1".equals(v);
   }
 
   /**
@@ -605,30 +758,36 @@ public class Canvas extends JPanel implements ComponentListener,
       Lane lane,
       TexturePaint asphaltTexture) {
     // Draw the lane itself
+    // fill lane surface (texture or color)
     if (asphaltTexture == null) {
       bgBuffer.setPaint(ASPHALT_COLOR);
     } else {
       bgBuffer.setPaint(asphaltTexture);
     }
     bgBuffer.fill(lane.getShape());
-    // Draw the left boundary
-    if (lane.hasLeftNeighbor()) {
-      bgBuffer.setPaint(LANE_SEPARATOR_COLOR);
-      bgBuffer.setStroke(LANE_SEPARATOR_STROKE);
-    } else {
-      bgBuffer.setPaint(ROAD_BOUNDARY_COLOR);
-      bgBuffer.setStroke(ROAD_BOUNDARY_STROKE);
+
+    // Draw lane boundaries only if enabled
+    if (showLaneLines) {
+      // left boundary
+      if (lane.hasLeftNeighbor()) {
+        bgBuffer.setPaint(LANE_SEPARATOR_COLOR);   // white dashed
+        bgBuffer.setStroke(LANE_SEPARATOR_STROKE);
+      } else {
+        bgBuffer.setPaint(ROAD_BOUNDARY_COLOR);    // yellow solid
+        bgBuffer.setStroke(ROAD_BOUNDARY_STROKE);
+      }
+      bgBuffer.draw(lane.leftBorder());
+
+      // right boundary
+      if (lane.hasRightNeighbor()) {
+        bgBuffer.setPaint(LANE_SEPARATOR_COLOR);   // white dashed
+        bgBuffer.setStroke(LANE_SEPARATOR_STROKE);
+      } else {
+        bgBuffer.setPaint(ROAD_BOUNDARY_COLOR);    // yellow solid
+        bgBuffer.setStroke(ROAD_BOUNDARY_STROKE);
+      }
+      bgBuffer.draw(lane.rightBorder());
     }
-    bgBuffer.draw(lane.leftBorder());
-    // Draw the right boundary
-    if (lane.hasRightNeighbor()) {
-      bgBuffer.setPaint(LANE_SEPARATOR_COLOR);
-      bgBuffer.setStroke(LANE_SEPARATOR_STROKE);
-    } else {
-      bgBuffer.setPaint(ROAD_BOUNDARY_COLOR);
-      bgBuffer.setStroke(ROAD_BOUNDARY_STROKE);
-    }
-    bgBuffer.draw(lane.rightBorder());
   }
 
   /**
