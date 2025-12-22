@@ -85,7 +85,6 @@ public class Debug {
    */
   public static final boolean IS_EXPECTED_IM_REPLY_TIME_CONSIDERED = true;
 
-
   /////////////////////////////////
   // PUBLIC STATIC METHODS
   /////////////////////////////////
@@ -191,7 +190,6 @@ public class Debug {
     return false;
   }
 
-
   /**
    * Whether or not the simulator print the parameters for arrival estimation
    */
@@ -258,7 +256,6 @@ public class Debug {
    */
   public static boolean SHOW_VEHICLE_COLOR_BY_MSG_STATE = true;
 
-
   /////////////////////////////////
   // Debug Points
   /////////////////////////////////
@@ -266,14 +263,12 @@ public class Debug {
   /**
    * The list of long term debug points.
    */
-  private static List<DebugPoint> longTermDebugPoints =
-    new LinkedList<DebugPoint>();
+  private static List<DebugPoint> longTermDebugPoints = new LinkedList<DebugPoint>();
 
   /**
    * The list of short term debug points.
    */
-  private static List<DebugPoint> shortTermDebugPoints =
-    new LinkedList<DebugPoint>();
+  private static List<DebugPoint> shortTermDebugPoints = new LinkedList<DebugPoint>();
 
   /**
    * Get the long-term debugging points.
@@ -294,7 +289,7 @@ public class Debug {
   /**
    * Add a new long-term debug point.
    *
-   * @param dp  a new long-term debug point.
+   * @param dp a new long-term debug point.
    */
   public static void addLongTermDebugPoint(DebugPoint dp) {
     longTermDebugPoints.add(dp);
@@ -319,7 +314,7 @@ public class Debug {
   /**
    * Add a new short-term debug point.
    *
-   * @param dp  a new short-term debug point
+   * @param dp a new short-term debug point
    */
   public static void addShortTermDebugPoint(DebugPoint dp) {
     shortTermDebugPoints.add(dp);
@@ -332,8 +327,7 @@ public class Debug {
   /**
    * A mapping from vehicle's VINs to the color of the vehicles.
    */
-  private static Map<Integer,Color> vinToVehicleColor =
-    new HashMap<Integer,Color>();
+  private static Map<Integer, Color> vinToVehicleColor = new HashMap<Integer, Color>();
 
   /**
    * Get the color of a vehicle.
@@ -371,6 +365,7 @@ public class Debug {
   /**
    * This private constructor ensures t hat this class is never instantiated.
    */
-  private Debug(){};
+  private Debug() {
+  };
 
 }

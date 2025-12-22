@@ -1,3 +1,5 @@
 target/
 .idea/
 docs/
+.vscode/
+.DS_Store

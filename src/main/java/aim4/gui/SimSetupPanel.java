@@ -46,6 +46,7 @@ import aim4.gui.parampanel.TrafficSignalParamPanel;
 import aim4.sim.setup.ApproxStopSignSimSetup;
 import aim4.sim.setup.ApproxNPhasesTrafficSignalSimSetup;
 import aim4.sim.setup.AutoDriverOnlySimSetup;
+import aim4.sim.setup.SouthOnlyProtocolSetup;
 import aim4.sim.setup.BasicSimSetup;
 import aim4.sim.setup.SimSetup;
 
@@ -131,7 +132,7 @@ public class SimSetupPanel extends JPanel implements ItemListener {
    */
   public SimSetup getSimSetup() {
     if (comboBox.getSelectedIndex() == 0) {
-      AutoDriverOnlySimSetup simSetup2 = new AutoDriverOnlySimSetup(simSetup);
+      SouthOnlyProtocolSetup simSetup2 = new SouthOnlyProtocolSetup(simSetup);
       simSetup2.setTrafficLevel(autoDriverOnlySetupPanel.getTrafficRate());
       simSetup2.setSpeedLimit(autoDriverOnlySetupPanel.getSpeedLimit());
       simSetup2.setStopDistBeforeIntersection(

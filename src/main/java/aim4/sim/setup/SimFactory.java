@@ -47,9 +47,12 @@ public class SimFactory {
    * @return a simulator
    */
   public static Simulator makeSimulator(SimSetup simSetup) {
+    System.out.println("[DEBUG] SimFactory.makeSimulator() called with: " + simSetup.getClass().getName());
     VinRegistry.reset();   // TODO: should make it part of the simulator
     System.gc();
-    return simSetup.getSimulator();
+    Simulator sim = simSetup.getSimulator();
+    System.out.println("[DEBUG] SimFactory.makeSimulator() done");
+    return sim;
   }
 
 }
